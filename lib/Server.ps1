@@ -1,38 +1,35 @@
 <#
 .SYNOPSIS
-    Server.ps1 - Detects and launches the Windrose dedicated server executable.
-
-.FUNCTIONS
-    Start-GameServer $cfg  - Auto-detects .exe in ServerRoot, starts it, waits, returns exit code.
+    lib/server.ps1 - Game server launcher
+.DESCRIPTION
+    Start-GameServer - Auto-detects the first .exe in WindowsServer\,
+                       launches it with optional args, waits for exit,
+                       and returns the process exit code.
 #>
 
 function Start-GameServer {
-    param([hashtable]$cfg)
+    param([Parameter(Mandatory)][PSCustomObject]$cfg)
 
     if (-not (Test-Path $cfg.ServerRoot)) {
-        throw "WindowsServer folder not found: $($cfg.ServerRoot)"
+        throw "Server root not found: $($cfg.ServerRoot)"
     }
 
-    # Auto-detect first .exe directly inside ServerRoot (not recursive)
-    $exe = Get-ChildItem -Path $cfg.ServerRoot -Filter '*.exe' -File |
-           Select-Object -First 1
-
-    if (-not $exe) {
-        throw "No .exe found in $($cfg.ServerRoot). Place the server executable inside the WindowsServer folder."
+    $exeFile = Get-ChildItem -Path $cfg.ServerRoot -Filter '*.exe' -File | Select-Object -First 1
+    if (-not $exeFile) {
+        throw "No .exe found in $($cfg.ServerRoot). Place your Windrose server executable there."
     }
 
-    Write-Host "  Executable : $($exe.Name)" -ForegroundColor DarkGray
-    Write-Host "  Path       : $($exe.FullName)" -ForegroundColor DarkGray
+    Write-Host "  Executable : $($exeFile.Name)" -ForegroundColor Gray
     if ($cfg.ServerArgs) {
-        Write-Host "  Args       : $($cfg.ServerArgs)" -ForegroundColor DarkGray
+        Write-Host "  Arguments  : $($cfg.ServerArgs)" -ForegroundColor Gray
     }
-    Write-Host ""
+    Write-Host ''
 
-    $pArgs = if ($cfg.ServerArgs) { $cfg.ServerArgs } else { @() }
-    $proc  = Start-Process -FilePath $exe.FullName `
-                           -ArgumentList $pArgs `
-                           -WorkingDirectory $cfg.ServerRoot `
-                           -PassThru -Wait
+    $argList = if ($cfg.ServerArgs) { $cfg.ServerArgs } else { @() }
+    $proc = Start-Process -FilePath $exeFile.FullName `
+                          -ArgumentList $argList `
+                          -WorkingDirectory $cfg.ServerRoot `
+                          -PassThru -Wait
 
     return $proc.ExitCode
 }
