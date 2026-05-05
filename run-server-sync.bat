@@ -31,22 +31,40 @@ echo  Windrose Sync - restore / start / upload
 echo ==========================================
 echo.
 
-echo [1/4] Restoring latest snapshot from remote...
+echo [0/5] Checking remote server lock...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0lock-acquire.ps1"
+if errorlevel 2 (
+  echo.
+  echo Server is already running on another machine. Aborting.
+  pause
+  exit /b 2
+)
+if errorlevel 1 (
+  echo [ERROR] Could not acquire remote lock. Aborting.
+  pause
+  exit /b 1
+)
+
+echo [1/5] Restoring latest snapshot from remote...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0restore-latest.ps1"
 if errorlevel 1 (
   echo [WARN] Restore returned a non-zero code. If this is your first run, that is normal.
 )
 
 echo.
-echo [2/4] Starting server...
+echo [2/5] Starting server...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start-server.ps1"
 set "SERVER_EXIT=%ERRORLEVEL%"
 
 echo.
-echo [3/4] Server exited with code %SERVER_EXIT%.
-echo [4/4] Uploading snapshot...
+echo [3/5] Server exited with code %SERVER_EXIT%.
+echo [4/5] Uploading snapshot...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0backup-upload.ps1"
 set "BACKUP_EXIT=%ERRORLEVEL%"
+
+echo.
+echo [5/5] Releasing server lock...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0lock-release.ps1"
 
 echo.
 if "%BACKUP_EXIT%"=="0" (
