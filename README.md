@@ -10,41 +10,27 @@ A Windows PowerShell automation bundle. End users open **one file** — everythi
 
 1. Put the `WindroseSyncApp` folder anywhere on your PC.
 2. Drop the `WindowsServer` folder inside it (same level as `START-HERE.bat`).
-3. Complete the **one-time setup** below.
-4. Double-click **`START-HERE.bat`** every time you want to host.
+3. Double-click **`START-HERE.bat`**.
+4. Follow the on-screen prompts to set up your Google Drive link.
 
 ---
 
-## One-time setup
+Everything is handled automatically the first time you run `START-HERE.bat`.
 
-### 1. Install rclone
+### 1. Automatic rclone installation
+If `rclone` is not found on your system, the script will automatically download the latest version and place it in a `bin/` folder inside the app directory.
 
-Download: https://rclone.org/downloads/  
-Add to PATH (the installer can do this automatically).
+### 2. Interactive Config Setup
+If `config.bat` is missing, the script will:
+1. **Detect Remotes:** Check if you have any rclone remotes (like Google Drive) set up.
+2. **Create Remote:** If you have none, it will guide you through creating one (opening your browser for login).
+3. **Select World:**
+   - **Join a Friend:** It lists all folders on your drive. Just pick the number for the world they shared with you.
+   - **Start Fresh:** Choose option `[0]` to create a new sync folder.
+   - **Manual:** Use option `[M]` to paste a folder name exactly as shared.
 
-### 2. Connect rclone to Google Drive
-
-```bat
-rclone config
-```
-
-Create a new remote, choose `drive`, follow the browser auth steps.  
-Share the same Google Drive folder with all friends. Each friend runs `rclone config` on their own PC.  
-Full guide: https://rclone.org/drive/
-
-### 3. Create your config
-
-```bat
-copy config.example.bat config.bat
-```
-
-Open `config.bat` in Notepad. Change **only** `RCLONE_REMOTE`:
-
-```bat
-set "RCLONE_REMOTE=gdrive:WindroseSync"
-```
-
-Every other path is auto-detected from your `WindowsServer` folder.
+### 3. Manual setup (Optional)
+If you prefer to set things up manually, copy `config.example.bat` to `config.bat` and set `RCLONE_REMOTE` to your `remote:folder` path.
 
 ---
 
@@ -56,7 +42,8 @@ Every other path is auto-detected from your `WindowsServer` folder.
        v
   main.ps1  (orchestrator)
        |
-       |-- lib/config.ps1    reads config.bat -> typed config object
+       |-- lib/setup.ps1      automatic rclone install + interactive config
+       |-- lib/config.ps1     reads config.bat -> typed config object
        |-- lib/ui.ps1         coloured console output helpers
        |-- lib/lock.ps1       remote lock on Google Drive
        |-- lib/snapshot.ps1   upload / restore world saves

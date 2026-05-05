@@ -20,6 +20,7 @@ $ROOT = $PSScriptRoot
 . "$ROOT\lib\lock.ps1"
 . "$ROOT\lib\snapshot.ps1"
 . "$ROOT\lib\server.ps1"
+. "$ROOT\lib\setup.ps1"
 
 # ── Banner ─────────────────────────────────────────────────────────────────
 Show-Banner
@@ -27,27 +28,9 @@ Show-Banner
 # ── Step 0 : Dependency checks ─────────────────────────────────────────────
 Write-Step 'Checking dependencies...'
 
-if (-not (Test-Path "$ROOT\config.bat")) {
-    Write-Err 'config.bat not found!'
-    Write-Host ''
-    Write-Host '  One-time setup required:'
-    Write-Host '    1. Copy config.example.bat  ->  config.bat'
-    Write-Host '    2. Open config.bat in Notepad'
-    Write-Host '    3. Set RCLONE_REMOTE to your Google Drive path'
-    Write-Host '       Example:  gdrive:WindroseSync'
-    Write-Host '    4. Save and re-run START-HERE.bat'
-    Write-Host ''
-    exit 1
-}
+Install-Rclone $ROOT
 
-if (-not (Get-Command rclone -ErrorAction SilentlyContinue)) {
-    Write-Err 'rclone is not installed or not in PATH!'
-    Write-Host ''
-    Write-Host '  Download from: https://rclone.org/downloads/'
-    Write-Host '  After installing, re-run START-HERE.bat'
-    Write-Host ''
-    exit 1
-}
+Initialize-Config $ROOT
 
 $cfg = Get-Config $ROOT
 
