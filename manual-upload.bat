@@ -1,5 +1,5 @@
 @echo off
 cd /d "%~dp0"
-call "config.bat"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0backup-upload.ps1"
+title Windrose Sync - Manual Upload
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& { . './lib/Config.ps1'; . './lib/Snapshot.ps1'; $cfg = Read-Config; Upload-Snapshot $cfg }"
 pause

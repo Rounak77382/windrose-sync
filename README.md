@@ -1,218 +1,166 @@
 # windrose-sync
 
-> **Host Windrose with your friends, one at a time, on any PC — same world, always in sync.**
+> **Host Windrose with your friends, one at a time — same world, always in sync.**
 
-A lightweight Windows batch + PowerShell bundle that:
-- Checks a **remote lock on Google Drive** to block multiple hosts from starting simultaneously.
-- Restores the latest shared world snapshot **before** starting the server.
-- Launches the Windrose dedicated server and **auto-detects the executable**.
-- Uploads a **new timestamped snapshot** after the server closes.
-- **Releases the remote lock** so the next friend can take over.
+A Windows PowerShell automation bundle that handles the full host-handoff loop:
 
-No cloud server needed. No port-forwarding nightmare. Just pass the host role between friends and play.
+1. **Checks a remote lock** on Google Drive — blocks if someone else is already hosting.
+2. **Fetches the latest world snapshot** before starting.
+3. **Launches the Windrose server** — exe auto-detected from the `WindowsServer` folder.
+4. **Uploads a new snapshot** after the server closes.
+5. **Releases the lock** so the next friend can take over.
+
+**End users open exactly one file: `START-HERE.bat`**
+
+---
+
+## Quick start
+
+1. Get the `WindroseSyncApp` folder (clone or download this repo).
+2. Drop the `WindowsServer` folder inside it (next to `START-HERE.bat`).
+3. Complete the one-time setup below.
+4. Double-click **`START-HERE.bat`** every time you want to host.
+
+---
+
+## One-time setup
+
+### 1. Install rclone
+
+Download and install rclone: <https://rclone.org/downloads/>
+
+Add it to your system `PATH` during installation.
+
+### 2. Connect Google Drive
+
+```bat
+rclone config
+```
+
+Create a remote, choose **Google Drive**, follow the browser auth. Name it `gdrive` or anything you like. Every player needs their own rclone config pointing at the **same shared Google Drive folder**.
+
+Full guide: <https://rclone.org/drive/>
+
+### 3. Create your config
+
+```bat
+copy config.example.bat config.bat
+```
+
+Open `config.bat` in Notepad and change only:
+
+| Setting | Example |
+|---|---|
+| `RCLONE_REMOTE` | `gdrive:WindroseSync` |
+| `SERVER_ARGS` | leave blank unless you need extra server flags |
+
+Everything else is auto-detected.
+
+---
+
+## Project structure
+
+```
+WindroseSyncApp/
+├─ START-HERE.bat          ← END USERS OPEN THIS
+├─ check-status.bat        ← See who is currently hosting
+├─ force-unlock.bat        ← Clear a stuck lock after a crash
+├─ manual-upload.bat       ← Re-upload last save manually
+├─ manual-restore.bat      ← Pull latest save manually
+├─ config.bat              ← Your local config (gitignored)
+├─ config.example.bat      ← Template — copy to config.bat
+├─ main.ps1                ← Master orchestrator (all 5 steps)
+├─ lib/
+│  ├─ Config.ps1           ← Reads config.bat into a typed hashtable
+│  ├─ Lock.ps1             ← Acquire / Release / Show lock state
+│  ├─ Restore.ps1          ← Download + restore world snapshot
+│  ├─ Server.ps1           ← Auto-detect exe + launch server
+│  └─ Snapshot.ps1         ← Stage + upload timestamped snapshot
+└─ WindowsServer/          ← Your Windrose server folder (not in git)
+   ├─ WindowsServer.exe    (any .exe — auto-detected)
+   └─ R5/Saved/SaveProfiles/Default/
+```
 
 ---
 
 ## How it works
 
 ```
-[Friend A runs run-server-sync.bat]
+[You double-click START-HERE.bat]
   │
-  ├► [0] Check remote lock (server-status.json on Google Drive)
-  │        └► If status=running → BLOCKED, show who is hosting, abort
-  │        └► If status=idle / no file → Write status=running, continue
-  ├► [1] Restore latest snapshot from Google Drive
-  ├► [2] Start WindowsServer.exe (auto-detected)
-  ├► [3] Wait for server to close
-  ├► [4] Upload new snapshot → gdrive:WindroseSync/snapshots/2026-05-05_18-30-00/
-  └► [5] Release lock (write status=idle)
-
-[Friend B tries to start while A is running]
-  └► [0] Check lock → status=running, host=FriendA → BLOCKED with clear message
-```
-
-**One host at a time. Enforced by a remote lock file. No silent collisions.**
-
----
-
-## Requirements
-
-- Windows 10 / 11
-- [rclone](https://rclone.org/downloads/) installed and in `PATH`
-- A shared Google Drive folder configured as an `rclone` remote
-- Windrose dedicated server files (the `WindowsServer` folder)
-- PowerShell 5+ (comes pre-installed on Windows 10/11)
-
----
-
-## Folder layout
-
-Place the `WindowsServer` folder **in the same directory** as the scripts:
-
-```text
-WindroseSyncApp/
-├─ run-server-sync.bat       ← Main launcher (use this)
-├─ check-status.bat          ← Check who is currently hosting
-├─ force-unlock.bat          ← Clear a stuck lock after a crash
-├─ manual-upload.bat         ← Upload a snapshot manually
-├─ manual-restore.bat        ← Restore the latest snapshot manually
-├─ config.bat                ← Your settings (copy from config.example.bat)
-├─ config.example.bat        ← Template
-├─ server-lock.ps1           ← Lock helper library (sourced by other scripts)
-├─ lock-acquire.ps1          ← Acquire the remote lock
-├─ lock-release.ps1          ← Release the remote lock
-├─ check-status.ps1          ← Print current lock status
-├─ start-server.ps1          ← Launches server, auto-detects exe
-├─ backup-upload.ps1         ← Creates and uploads a timestamped snapshot
-├─ restore-latest.ps1        ← Downloads latest snapshot, replaces local save
-└─ WindowsServer/            ← ← ← Put your Windrose server folder here
-   ├─ WindowsServer.exe      ← (or any .exe — auto-detected)
-   ├─ ServerDescription.json
-   └─ R5/
-      └─ Saved/
-         └─ SaveProfiles/
-            └─ Default/
+  ├─ main.ps1 loads lib/ modules
+  │
+  ├─ [1/5] Check dependencies (config, rclone, WindowsServer folder)
+  ├─ [2/5] Acquire lock  →  if status=running: show blocker, abort
+  │                      →  if status=idle:    write running, continue
+  ├─ [3/5] Restore snapshot from Google Drive
+  ├─ [4/5] Launch server  (players join...  session runs...  server closes)
+  ├─ [5/5] Upload snapshot to Google Drive
+  └─ [5/5] Release lock  →  write status=idle
 ```
 
 ---
 
-## Setup
-
-### 1. Set up rclone with Google Drive
-
-Install rclone and configure a remote named `gdrive` (or any name you like):
-
-```bash
-rclone config
-```
-
-Follow the interactive prompts to connect Google Drive. Share the same Google Drive folder with all friends. Each friend runs `rclone config` on their own PC.
-
-Full guide: https://rclone.org/drive/
-
-### 2. Copy and edit config
-
-```bat
-copy config.example.bat config.bat
-```
-
-Open `config.bat` in Notepad and change:
-
-| Setting | What to set |
-|---|---|
-| `RCLONE_REMOTE` | Your rclone remote + base folder, e.g. `gdrive:WindroseSync` |
-| `SERVER_DESCRIPTION_FILE` | Path to `ServerDescription.json` if not inside `WindowsServer\` |
-| `SERVER_ARGS` | Extra arguments for the server exe (usually leave blank) |
-
-Everything else is **auto-detected** from the `WindowsServer` folder beside the scripts.
-
-### 3. First run
-
-The first host places the `WindowsServer` folder beside the scripts, then runs:
-
-```bat
-run-server-sync.bat
-```
-
-Every subsequent host runs the same `run-server-sync.bat` on their own PC.
-
----
-
-## Remote file structure on Google Drive
+## Remote structure on Google Drive
 
 ```
 gdrive:WindroseSync/
-├─ server-status.json          ← Remote lock file (status: running / idle)
+├─ server-status.json        ← Live lock (running / idle)
 └─ snapshots/
    ├─ latest.txt
    ├─ 2026-05-05_18-30-00/
-   │  ├─ Default/
-   │  ├─ extra/ServerDescription.json
-   │  └─ snapshot.json
+   │  ├─ Default/            ← Full save package
+   │  ├─ extra/              ← ServerDescription.json (optional)
+   │  └─ snapshot.json       ← Metadata
    └─ ...
 ```
 
-### server-status.json (running)
-```json
-{
-  "status":    "running",
-  "host":      "Rounak",
-  "machine":   "ROUNAK-PC",
-  "startedAt": "2026-05-05T18:30:00.000Z",
-  "pid":       12345
-}
-```
+---
 
-### server-status.json (idle)
-```json
-{
-  "status":      "idle",
-  "host":        "Rounak",
-  "machine":     "ROUNAK-PC",
-  "lastSession": "2026-05-05T20:45:00.000Z"
-}
+## When you get blocked
+
+```
++----------------------------------------------------------+
+|       SERVER IS ALREADY RUNNING  --  BLOCKED             |
++----------------------------------------------------------+
+
+  Host    : Rounak
+  Machine : ROUNAK-PC
+  Started : 2026-05-05T18:30:00Z
+
+Wait for that session to end, then open START-HERE.bat again.
 ```
 
 ---
 
-## File descriptions
+## Crash recovery
 
-| File | Purpose |
-|---|---|
-| `run-server-sync.bat` | Main entry point. Lock → restore → start → upload → unlock. |
-| `check-status.bat` | Show who is currently hosting (reads remote lock). |
-| `force-unlock.bat` | Force-release a stuck lock after a crash (with confirmation prompt). |
-| `manual-upload.bat` | Upload a snapshot without starting the server. |
-| `manual-restore.bat` | Restore the latest snapshot without starting the server. |
-| `server-lock.ps1` | Shared library: Read-Config, Get-RemoteLock, Invoke-AcquireLock, Invoke-ReleaseLock. |
-| `lock-acquire.ps1` | Thin wrapper — calls Invoke-AcquireLock from server-lock.ps1. |
-| `lock-release.ps1` | Thin wrapper — calls Invoke-ReleaseLock from server-lock.ps1. |
-| `check-status.ps1` | Reads and pretty-prints the remote lock state. |
-| `start-server.ps1` | Auto-detects the .exe in WindowsServer\, launches it, waits for exit. |
-| `backup-upload.ps1` | Stages a snapshot, uploads to rclone remote, updates latest.txt. |
-| `restore-latest.ps1` | Reads latest.txt, downloads snapshot, backs up local save, replaces. |
-| `config.example.bat` | Template for config.bat. |
-
----
-
-## What happens when you get blocked
-
-If you run `run-server-sync.bat` while someone else is already hosting, you will see:
-
-```
-╔══════════════════════════════════════════════════════════╗
-║          SERVER IS ALREADY RUNNING — BLOCKED             ║
-╚══════════════════════════════════════════════════════════╝
-
-  Host      : Rounak
-  Machine   : ROUNAK-PC
-  Started   : 2026-05-05T18:30:00.000Z
-
-Wait for that session to end before starting a new one.
-If the previous host crashed without releasing the lock,
-run  force-unlock.bat  to clear it manually.
-```
-
----
-
-## Crash recovery (stuck lock)
-
-If the host's PC crashes mid-session, the lock stays `status=running` on Google Drive forever. Any friend can clear it:
+If the host's PC crashes and the lock stays `running`, run:
 
 ```bat
 force-unlock.bat
 ```
 
-This prompts for confirmation (type `YES`), then writes `status=idle` to the remote.
+This prompts for `YES` then writes `status=idle` to Google Drive.
+
+---
+
+## Utility scripts
+
+| File | Purpose |
+|---|---|
+| `check-status.bat` | Show who is currently hosting |
+| `force-unlock.bat` | Clear a stuck lock after a crash |
+| `manual-upload.bat` | Re-upload last save without starting the server |
+| `manual-restore.bat` | Pull latest save without starting the server |
 
 ---
 
 ## Shared-hosting rules
 
-1. **Only one person hosts at a time** — the lock enforces this automatically.
-2. **Always exit the server cleanly** — let the script finish uploading before closing the window.
-3. **Never close the terminal mid-session** — the lock release happens in step 5; killing the window early leaves the lock stuck.
-4. **If the lock gets stuck** after a crash, use `force-unlock.bat`.
+1. **One host at a time** — the lock enforces this automatically.
+2. **Do not close `START-HERE.bat` mid-session** — wait for the upload step to finish.
+3. **If the lock gets stuck** after a crash, use `force-unlock.bat`.
 
 ---
 
@@ -220,12 +168,13 @@ This prompts for confirmation (type `YES`), then writes `status=idle` to the rem
 
 | Problem | Fix |
 |---|---|
-| `rclone: command not found` | Install rclone and add it to your `PATH`. |
-| Blocked even though nobody is hosting | Previous session crashed. Run `force-unlock.bat`. |
-| `No exe found in WindowsServer` | Make sure your server executable is inside `WindowsServer\`. |
-| `SAVE_PACKAGE not found` | Run the server once to generate the save folder, then retry. |
+| `config.bat not found` | Copy `config.example.bat` → `config.bat`, set `RCLONE_REMOTE`. |
+| `rclone: command not found` | Install rclone from <https://rclone.org/downloads/> |
+| Blocked when nobody is hosting | Previous session crashed. Run `force-unlock.bat`. |
+| `WindowsServer folder not found` | Put `WindowsServer/` next to `START-HERE.bat`. |
+| `No .exe found in WindowsServer` | Place your server `.exe` directly inside `WindowsServer/`. |
 | Players cannot join | Open UDP 7777 and 7778 in Windows Firewall on the host PC. |
-| Lock file shows wrong person | Use `check-status.bat` to read current state, then `force-unlock.bat` if needed. |
+| Save did not update | Let the upload step finish before closing the window. |
 
 ---
 
