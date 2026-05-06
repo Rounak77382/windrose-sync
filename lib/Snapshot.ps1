@@ -24,8 +24,9 @@ function Upload-Snapshot {
     $stagingDir = Join-Path $stagingRoot $timestamp
     New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
 
-    # Copy save package
-    Copy-Item -Path $cfg.SavePackage -Destination (Join-Path $stagingDir 'Default') -Recurse -Force
+    # Copy save package as a compressed ZIP file
+    $saveLeaf = Split-Path $cfg.SavePackage -Leaf
+    Compress-Archive -Path "$($cfg.SavePackage)\*" -DestinationPath (Join-Path $stagingDir "$saveLeaf.zip") -Force
 
     # Copy ServerDescription.json if present
     $includesDesc = $false
@@ -68,7 +69,10 @@ function Restore-Snapshot {
 
     # Read latest.txt
     $latestLocal = Join-Path $downloadsDir 'latest.txt'
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     rclone copyto "$($cfg.RemoteSnapshotsDir)/latest.txt" $latestLocal 2>$null
+    $ErrorActionPreference = $oldPreference
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $latestLocal)) {
         return 'skipped'
     }
@@ -84,23 +88,23 @@ function Restore-Snapshot {
     rclone copy "$($cfg.RemoteSnapshotsDir)/$snapshotName" $snapLocal --create-empty-src-dirs --transfers 4 --checkers 8
     if ($LASTEXITCODE -ne 0) { throw "rclone download failed (exit $LASTEXITCODE)." }
 
-    $downloadedSave = Join-Path $snapLocal 'Default'
-    if (-not (Test-Path $downloadedSave)) {
-        throw "Downloaded snapshot missing Default folder: $downloadedSave"
+    $saveLeaf = Split-Path $cfg.SavePackage -Leaf
+    $zipFile = Join-Path $snapLocal "$saveLeaf.zip"
+    if (-not (Test-Path $zipFile)) {
+        throw "Downloaded snapshot missing $saveLeaf.zip file: $zipFile"
     }
 
     # Backup current local save
     $backupDir = Join-Path $cfg.LocalBackupDir (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')
     New-Item -ItemType Directory -Force -Path $backupDir | Out-Null
     if (Test-Path $cfg.SavePackage) {
-        Copy-Item -Path $cfg.SavePackage -Destination (Join-Path $backupDir 'Default') -Recurse -Force
+        Copy-Item -Path $cfg.SavePackage -Destination (Join-Path $backupDir $saveLeaf) -Recurse -Force
         Remove-Item -Path $cfg.SavePackage -Recurse -Force
     }
 
-    # Replace save
-    $saveParent = Split-Path $cfg.SavePackage -Parent
-    New-Item -ItemType Directory -Force -Path $saveParent | Out-Null
-    Copy-Item -Path $downloadedSave -Destination $cfg.SavePackage -Recurse -Force
+    # Replace save by expanding the ZIP file
+    New-Item -ItemType Directory -Force -Path $cfg.SavePackage | Out-Null
+    Expand-Archive -Path $zipFile -DestinationPath $cfg.SavePackage -Force
 
     # Optionally restore ServerDescription.json
     $downloadedDesc = Join-Path $snapLocal 'extra\ServerDescription.json'

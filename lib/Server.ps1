@@ -14,9 +14,15 @@ function Start-GameServer {
         throw "Server root not found: $($cfg.ServerRoot)"
     }
 
-    $exeFile = Get-ChildItem -Path $cfg.ServerRoot -Filter '*.exe' -File | Select-Object -First 1
+    $shippingPath = Join-Path $cfg.ServerRoot 'R5\Binaries\Win64\WindroseServer-Win64-Shipping.exe'
+    if (Test-Path $shippingPath) {
+        $exeFile = Get-Item $shippingPath
+    } else {
+        $exeFile = Get-ChildItem -Path $cfg.ServerRoot -Filter '*.exe' -File | Select-Object -First 1
+    }
+
     if (-not $exeFile) {
-        throw "No .exe found in $($cfg.ServerRoot). Place your Windrose server executable there."
+        throw "No server executable found in $($cfg.ServerRoot). Please verify your files."
     }
 
     Write-Host "  Executable : $($exeFile.Name)" -ForegroundColor Gray
@@ -25,11 +31,58 @@ function Start-GameServer {
     }
     Write-Host ''
 
-    $argList = if ($cfg.ServerArgs) { $cfg.ServerArgs } else { @() }
+    $argList = if ($cfg.ServerArgs) { $cfg.ServerArgs.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries) } else { @() }
+    if ($argList -notcontains '-log') {
+        $argList += '-log'
+    }
+    
+    $serverLogOut = Join-Path $cfg.WorkRoot 'server.log'
+    $serverLogErr = Join-Path $cfg.WorkRoot 'server.err'
+    " " | Out-File -FilePath $serverLogOut -Force -Encoding UTF8
+    " " | Out-File -FilePath $serverLogErr -Force -Encoding UTF8
+
     $proc = Start-Process -FilePath $exeFile.FullName `
                           -ArgumentList $argList `
                           -WorkingDirectory $cfg.ServerRoot `
-                          -PassThru -Wait
+                          -RedirectStandardOutput $serverLogOut `
+                          -RedirectStandardError $serverLogErr `
+                          -PassThru
+
+    $streamOut = [System.IO.File]::Open($serverLogOut, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    $readerOut = [System.IO.StreamReader]::new($streamOut)
+
+    $streamErr = [System.IO.File]::Open($serverLogErr, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    $readerErr = [System.IO.StreamReader]::new($streamErr)
+
+    try {
+        while (-not $proc.HasExited) {
+            $lineOut = $readerOut.ReadLine()
+            if ($lineOut -ne $null) {
+                Write-ToLog "  [SERVER] $lineOut"
+                continue
+            }
+            $lineErr = $readerErr.ReadLine()
+            if ($lineErr -ne $null) {
+                Write-ToLog "  [SERVER-ERR] $lineErr"
+                continue
+            }
+            Start-Sleep -Milliseconds 100
+        }
+
+        # Read any remaining logs after exit
+        while (($lineOut = $readerOut.ReadLine()) -ne $null) {
+            Write-ToLog "  [SERVER] $lineOut"
+        }
+        while (($lineErr = $readerErr.ReadLine()) -ne $null) {
+            Write-ToLog "  [SERVER-ERR] $lineErr"
+        }
+    }
+    finally {
+        $readerOut.Close()
+        $streamOut.Close()
+        $readerErr.Close()
+        $streamErr.Close()
+    }
 
     return $proc.ExitCode
 }

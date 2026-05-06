@@ -21,8 +21,8 @@ function Get-Config {
         'REMOTE_SNAPSHOTS_DIR','SERVER_ARGS'
     )
 
-    $echoLines = ($keys | ForEach-Object { "echo $_=%$_%" }) -join ' & '
-    $raw = cmd /c "call `"$configPath`" & $echoLines"
+    $echoLines = ($keys | ForEach-Object { "echo $_=!$_!" }) -join ' & '
+    $raw = cmd /v:on /c "call `"$configPath`" & $echoLines"
 
     $map = @{}
     foreach ($line in $raw) {
