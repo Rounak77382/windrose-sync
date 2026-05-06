@@ -1,18 +1,13 @@
 #Requires -Version 5
-<#
-.SYNOPSIS
-    Windrose Sync - Master Orchestrator
-.DESCRIPTION
-    Single entry point called by START-HERE.bat.
-    Coordinates: dependency checks -> lock acquire -> restore
-    -> start server -> upload snapshot -> lock release.
-    All real logic lives in lib\ modules.
-#>
+param([switch]$ServiceMode)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $ROOT = $PSScriptRoot
+$WORK = Join-Path $ROOT 'work'
+if (-not (Test-Path $WORK)) { New-Item -ItemType Directory -Path $WORK | Out-Null }
+$Global:LogPath = Join-Path $WORK 'session.log'
 
 # ── Import library modules ─────────────────────────────────────────────────
 . "$ROOT\lib\ui.ps1"
@@ -22,100 +17,80 @@ $ROOT = $PSScriptRoot
 . "$ROOT\lib\server.ps1"
 . "$ROOT\lib\setup.ps1"
 
-# ── Banner ─────────────────────────────────────────────────────────────────
-Show-Banner
-
-# ── Step 0 : Dependency checks ─────────────────────────────────────────────
-Write-Step 'Checking dependencies...'
-
-Install-Rclone $ROOT
-
-Initialize-Config $ROOT
-
-$cfg = Get-Config $ROOT
-
-if (-not (Test-Path $cfg.ServerRoot)) {
-    Write-Err "WindowsServer folder not found: $($cfg.ServerRoot)"
-    Write-Host ''
-    Write-Host '  Place the WindowsServer folder in the same directory as START-HERE.bat.'
-    Write-Host ''
-    exit 1
-}
-
-Write-Ok 'All dependencies satisfied.'
-Write-Host ''
-
-# ── Step 1 : Acquire remote lock ───────────────────────────────────────────
-Write-Step '[1/5] Checking remote server lock...'
-try {
-    Invoke-AcquireLock $cfg
-    Write-Ok "Lock acquired. You are now the host ($env:USERNAME on $env:COMPUTERNAME)."
-} catch {
-    # Invoke-AcquireLock writes the blocked message itself and throws.
-    Write-Host ''
-    exit 2
-}
-Write-Host ''
-
-# ── Step 2 : Restore latest save ───────────────────────────────────────────
-Write-Step '[2/5] Fetching latest world save from Google Drive...'
-try {
-    $result = Restore-Snapshot $cfg
-    if ($result -eq 'skipped') {
-        Write-Warn 'No remote snapshot found. Starting with current local save.'
-    } else {
-        Write-Ok "World save restored from snapshot: $result"
+# ── LAUNCHER MODE ──────────────────────────────────────────────────────────
+if (-not $ServiceMode) {
+    Show-Banner
+    
+    # 1. Perform Interactive Steps in the Foreground
+    Write-Step 'Checking dependencies...'
+    Install-Rclone $ROOT
+    Initialize-Config $ROOT
+    
+    # 2. Clear old session log
+    " " | Out-File -FilePath $Global:LogPath -Force -Encoding UTF8
+    
+    # 3. Start the Background Service
+    Write-Step "Initializing Background Sync Service..."
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-File", "`"$PSCommandPath`"", "-ServiceMode"
+    
+    Write-Host ""
+    Write-Host "  [TIP] You can close this window at any time." -ForegroundColor Gray
+    Write-Host "        The sync will continue in the system tray." -ForegroundColor Gray
+    Write-Host ""
+    
+    # 4. Tail Logs
+    Start-Sleep -Seconds 2
+    if (Test-Path $Global:LogPath) {
+        Get-Content -Path $Global:LogPath -Wait -Tail 100
     }
-} catch {
-    Write-Warn "Restore warning: $($_.Exception.Message)"
-    Write-Warn 'Continuing with existing local save.'
+    exit 0
 }
-Write-Host ''
 
-# ── Step 3 : Start server ──────────────────────────────────────────────────
-Write-Step '[3/5] Starting Windrose server...'
-Write-Host '  (Close the SERVER WINDOW when your session ends.)'
-Write-Host '  (Keep THIS window open until the upload completes.)'
-Write-Host ''
-
-$serverExitCode = Start-GameServer $cfg
-
-Write-Host ''
-Write-Step "[4/5] Server closed (exit code: $serverExitCode). Saving world..."
-Write-Host ''
-
-# ── Step 4 : Upload snapshot ───────────────────────────────────────────────
-Write-Step '[4/5] Uploading world snapshot to Google Drive...'
-$uploadOk = $false
+# ── SERVICE MODE (Background) ──────────────────────────────────────────────
 try {
-    $snapName = Upload-Snapshot $cfg
-    Write-Ok "Snapshot uploaded: $snapName"
-    $uploadOk = $true
-} catch {
-    Write-Err "Snapshot upload failed: $($_.Exception.Message)"
-    Write-Warn 'Your session data may not be saved remotely. Check rclone connectivity.'
-}
-Write-Host ''
+    # 1. Start the Tray Icon
+    $trayScript = Join-Path $ROOT 'lib\tray.ps1'
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-Command", ". `"$trayScript`"; Show-SyncTray -LogPath `"$Global:LogPath`" -AppRoot `"$ROOT`""
 
-# ── Step 5 : Release lock ──────────────────────────────────────────────────
-Write-Step '[5/5] Releasing server lock...'
-try {
+    # 2. Standard Workflow (Non-interactive)
+    $cfg = Get-Config $ROOT
+
+    if (-not (Test-Path $cfg.ServerRoot)) {
+        Write-Err "WindowsServer folder not found: $($cfg.ServerRoot)"
+        exit 1
+    }
+
+    Write-Step '[1/5] Checking remote server lock...'
+    Invoke-AcquireLock $cfg
+    Write-Ok "Lock acquired."
+
+    Write-Step '[2/5] Fetching latest world save...'
+    try {
+        $result = Restore-Snapshot $cfg
+        Write-Ok "World save restored: $result"
+    } catch {
+        Write-Warn "Restore warning: $($_.Exception.Message). Continuing with local save."
+    }
+
+    Write-Step '[3/5] Starting Windrose server...'
+    $serverExitCode = Start-GameServer $cfg
+    Write-Ok "Server closed (exit code: $serverExitCode)."
+
+    Write-Step '[4/5] Uploading world snapshot...'
+    try {
+        $snapName = Upload-Snapshot $cfg
+        Write-Ok "Snapshot uploaded: $snapName"
+    } catch {
+        Write-Err "Snapshot upload failed: $($_.Exception.Message)"
+    }
+
+    Write-Step '[5/5] Releasing server lock...'
     Release-Lock $cfg
-    Write-Ok 'Lock released. Another friend can now host.'
-} catch {
-    Write-Warn "Could not release lock: $($_.Exception.Message)"
-    Write-Warn 'Run force-unlock.bat to clear it manually.'
+    Write-Ok 'Session complete. Sync service stopping.'
+    
+    Start-Sleep -Seconds 5
 }
-Write-Host ''
-
-# ── Summary ────────────────────────────────────────────────────────────────
-Write-Host '  +-----------------------------------------------+'
-if ($uploadOk) {
-    Write-Host '  |  SESSION COMPLETE. World saved and synced.    |'
-} else {
-    Write-Host '  |  SESSION DONE but upload FAILED. See above.   |'
+catch {
+    Write-Err "Service Critical Failure: $($_.Exception.Message)"
+    $_.ScriptStackTrace | Out-File -FilePath (Join-Path $WORK 'error.log') -Append
 }
-Write-Host '  +-----------------------------------------------+'
-Write-Host ''
-
-exit $serverExitCode

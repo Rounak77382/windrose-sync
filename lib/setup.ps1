@@ -77,7 +77,7 @@ function Initialize-Config {
     }
 
     # 1. Ensure we have a remote
-    $remotes = rclone listremotes
+    $remotes = cmd /c "rclone listremotes 2>nul"
     $selectedRemote = ""
 
     if ([string]::IsNullOrWhiteSpace($remotes)) {
@@ -89,7 +89,7 @@ function Initialize-Config {
         rclone config create gdrive drive
         $selectedRemote = "gdrive:"
     } else {
-        $remoteList = $remotes -split "`n" | Where-Object { $_.Trim() -ne "" }
+        $remoteList = @($remotes -split "`n" | Where-Object { $_.Trim() -ne "" })
         if ($remoteList.Count -eq 1) {
             $selectedRemote = $remoteList[0].Trim()
         } else {
@@ -103,22 +103,12 @@ function Initialize-Config {
         }
     }
 
-    # 2. Pick or Create Folder
+    # 2. Choose Mode
     Write-Host ''
-    Write-Step "Fetching folders from $selectedRemote..."
-    $folders = rclone lsd $selectedRemote 2>$null | ForEach-Object { 
-        if ($_ -match ' -1 (.*)$') { $matches[1].Trim() }
-    }
-
     Write-Host "  How do you want to host?" -ForegroundColor Yellow
-    Write-Host "    [0] Start a NEW world (type a new folder name)"
-    
-    if ($folders) {
-        for ($i=0; $i -lt $folders.Count; $i++) {
-            Write-Host "    [$($i+1)] Join friend's world: $($folders[$i])"
-        }
-    }
-    Write-Host "    [M] Manually paste a folder name"
+    Write-Host "    [0] Start a NEW world"
+    Write-Host "    [1] Join friend's world (Paste name)"
+    Write-Host ''
     
     $selection = Read-Host -Prompt "  Selection"
     $finalRemotePath = ""
@@ -127,13 +117,10 @@ function Initialize-Config {
         $newName = Read-Host -Prompt "  Enter NEW folder name (e.g. MyWindroseServer)"
         if ([string]::IsNullOrWhiteSpace($newName)) { Write-Err "Name cannot be empty."; exit 1 }
         $finalRemotePath = "$selectedRemote$newName"
-    } elseif ($selection -ieq "M") {
-        $manualName = Read-Host -Prompt "  Paste the folder name exactly as shared"
+    } else {
+        $manualName = Read-Host -Prompt "  Paste the world folder name exactly as shared"
         if ([string]::IsNullOrWhiteSpace($manualName)) { Write-Err "Name cannot be empty."; exit 1 }
         $finalRemotePath = "$selectedRemote$manualName"
-    } else {
-        $idx = [int]$selection - 1
-        $finalRemotePath = "$selectedRemote$($folders[$idx])"
     }
 
     try {
