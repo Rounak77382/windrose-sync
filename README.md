@@ -2,58 +2,44 @@
 
 > **Host Windrose with your friends, one at a time, on any PC — same world, always in sync.**
 
-A Windows PowerShell automation bundle. End users open **one file** — everything else is automatic.
+A lightweight, premium Python full-stack automation bundle. End users open **one file** — everything else is handled via a gorgeous native Desktop Control Panel.
 
 ---
 
 ## Quick start
 
 1. Put the `WindroseSyncApp` folder anywhere on your PC.
-2. Drop the `WindowsServer` folder inside it (same level as `START-HERE.bat`).
-3. Double-click **`START-HERE.bat`**.
-4. Follow the on-screen prompts to set up your Google Drive link.
-
----
-
-Everything is handled automatically the first time you run `START-HERE.bat`.
-
-### 1. Automatic rclone installation
-If `rclone` is not found on your system, the script will automatically download the latest version and place it in a `bin/` folder inside the app directory.
-
-### 2. Interactive Config Setup
-If `config.bat` is missing, the script will:
-1. **Detect Remotes:** Check if you have any rclone remotes (like Google Drive) set up.
-2. **Create Remote:** If you have none, it will guide you through creating one (opening your browser for login).
-3. **Select World:**
-   - **Join a Friend:** It lists all folders on your drive. Just pick the number for the world they shared with you.
-   - **Start Fresh:** Choose option `[0]` to create a new sync folder.
-   - **Manual:** Use option `[M]` to paste a folder name exactly as shared.
-
-### 3. Manual setup (Optional)
-If you prefer to set things up manually, copy `config.example.bat` to `config.bat` and set `RCLONE_REMOTE` to your `remote:folder` path.
+2. Drop the `WindowsServer` folder inside it (same level as `main.py`).
+3. Ensure you have Python installed. Install dependencies:
+   ```cmd
+   pip install -r requirements.txt
+   ```
+4. Start the application:
+   ```cmd
+   python main.py
+   ```
+   It will launch the native Control Panel GUI.
 
 ---
 
 ## How it works
 
 ```
-  START-HERE.bat  (double-click)
+  python main.py
        |
        v
-  main.ps1  (orchestrator)
+  main.py  (CustomTkinter Native GUI App)
        |
-       |-- lib/setup.ps1      automatic rclone install + interactive config
-       |-- lib/config.ps1     reads config.bat -> typed config object
-       |-- lib/ui.ps1         coloured console output helpers
-       |-- lib/lock.ps1       remote lock on Google Drive
-       |-- lib/snapshot.ps1   upload / restore world saves
-       `-- lib/server.ps1     auto-detect exe, launch, wait
+       |-- core/config.py     reads config.json -> dynamic config object
+       |-- core/lock.py       remote lock on Google Drive (using rclone)
+       |-- core/snapshot.py   upload / restore world saves (zip & rclone)
+       `-- core/server.py     threaded game server manager (auto-detect exe, live log stream)
 
   Flow:
   [1] Dependency check  (config, rclone, WindowsServer folder)
   [2] Acquire lock      <- blocks if another friend is already hosting
   [3] Restore save      <- pulls latest snapshot from Google Drive
-  [4] Start server      <- players join, session runs
+  [4] Start server      <- players join, session runs, logs piped directly to GUI text box
   [5] Upload snapshot   <- new timestamped save pushed to Google Drive
   [6] Release lock      <- next friend can now host
 ```
@@ -64,113 +50,44 @@ If you prefer to set things up manually, copy `config.example.bat` to `config.ba
 
 ```
 WindroseSyncApp/
-├── START-HERE.bat          <- END USERS OPEN THIS
-├── check-status.bat        <- See who is currently hosting
-├── force-unlock.bat        <- Clear a stuck lock after a crash
-├── manual-upload.bat       <- Upload snapshot without starting server
-├── manual-restore.bat      <- Restore snapshot without starting server
-├── config.bat              <- Your local config  (gitignored)
-├── config.example.bat      <- Config template
-├── main.ps1                <- Orchestrator (called by START-HERE.bat)
-├── lib/
-│   ├── config.ps1          <- Config reader -> typed PSCustomObject
-│   ├── ui.ps1              <- Write-Step / Write-Ok / Write-Warn / Write-Err
-│   ├── lock.ps1            <- Acquire / Release / Show remote lock
-│   ├── snapshot.ps1        <- Upload-Snapshot / Restore-Snapshot
-│   └── server.ps1          <- Start-GameServer (auto-detect exe)
+├── main.py                 <- Central FastAPI app (Start here!)
+├── cli.py                  <- Command-line utility helper
+├── config.json             <- Your local config
+├── requirements.txt        <- Python dependencies
+├── core/
+│   ├── config.py           
+│   ├── lock.py             
+│   ├── snapshot.py         
+│   └── server.py           
 └── WindowsServer/          <- Your Windrose server folder (NOT in git)
-    ├── WindowsServer.exe
-    └── R5/Saved/SaveProfiles/Default/
 ```
 
 ---
 
-## Remote structure on Google Drive
+## Utility commands (cli.py)
 
-```
-gdrive:WindroseSync/
-├── server-status.json        <- Live lock  (status: running / idle)
-└── snapshots/
-    ├── latest.txt
-    ├── 2026-05-05_18-30-00/
-    │   ├── Default/          <- Full save package
-    │   ├── extra/ServerDescription.json
-    │   └── snapshot.json     <- Metadata (host, machine, timestamp)
-    └── ...
-```
+You can perform administrative actions via the command line with `cli.py`:
 
-### server-status.json
-
-**While hosting:**
-```json
-{ "status": "running", "host": "Rounak", "machine": "ROUNAK-PC", "startedAt": "2026-05-05T18:30:00Z" }
-```
-**Idle:**
-```json
-{ "status": "idle", "host": "Rounak", "machine": "ROUNAK-PC", "lastSession": "2026-05-05T20:45:00Z" }
-```
-
----
-
-## What you see when blocked
-
-```
-  +----------------------------------------------------------+
-  |       SERVER IS ALREADY RUNNING  --  BLOCKED             |
-  +----------------------------------------------------------+
-
-  Host    : Rounak
-  Machine : ROUNAK-PC
-  Since   : 2026-05-05T18:30:00Z
-
-  Wait for that session to end, then open START-HERE.bat again.
-  If the host crashed, run  force-unlock.bat  to clear the lock.
-```
-
----
-
-## Utility scripts
-
-| File | When to use |
+| Command | Action |
 |---|---|
-| `check-status.bat` | Check who is currently hosting before you try to start |
-| `force-unlock.bat` | Clear a stuck lock after a crash (prompts for YES) |
-| `manual-upload.bat` | Re-upload last save without starting the server |
-| `manual-restore.bat` | Pull the latest save without starting the server |
+| `python cli.py status` | Check who is currently hosting before you try to start |
+| `python cli.py unlock` | Clear a stuck lock after a crash |
+| `python cli.py upload` | Re-upload last save without starting the server |
+| `python cli.py restore` | Pull the latest save without starting the server |
 
 ---
 
 ## Crash recovery
 
-If a host's PC crashes mid-session, the lock stays `running`. Any friend can clear it:
-
-```bat
-force-unlock.bat
-```
-
-Type `YES` at the prompt. The lock is released and hosting can continue.
+If a host's PC crashes mid-session, the lock stays `running`. Any friend can clear it using **`python cli.py unlock`** or directly via the **Force Unlock** button on the Control Panel!
 
 ---
 
 ## Shared-hosting rules
 
 1. **One host at a time** — the lock enforces this automatically.
-2. **Do not close `START-HERE.bat` while uploading** — wait for step 5 to complete.
-3. **If the lock gets stuck** after a crash, use `force-unlock.bat`.
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `config.bat not found` | Copy `config.example.bat` → `config.bat`, set `RCLONE_REMOTE`. |
-| `rclone not found` | Install rclone and add to PATH. |
-| Blocked with no active host | Previous session crashed. Run `force-unlock.bat`. |
-| `WindowsServer folder not found` | Put `WindowsServer\` next to `START-HERE.bat`. |
-| `No .exe found` | Make sure the server `.exe` is directly inside `WindowsServer\`. |
-| Players cannot join | Open UDP 7777 and 7778 in Windows Firewall on the host PC. |
-| Upload failed | Check rclone config (`rclone lsd gdrive:`). Retry `manual-upload.bat`. |
+2. **Do not close the Control Panel/server while uploading** — wait for the upload complete log to show.
+3. **If the lock gets stuck** after a crash, use the Control Panel's unlock button or run `python cli.py unlock`.
 
 ---
 
