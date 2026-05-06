@@ -128,7 +128,7 @@ function Initialize-Config {
         # Replace the example value. We look for the line set "RCLONE_REMOTE=..."
         $newContent = $content -replace 'set "RCLONE_REMOTE=.*"', "set `"RCLONE_REMOTE=$finalRemotePath`""
         
-        $newContent | Set-Content -Path $configPath -Encoding UTF8
+        $newContent | Set-Content -Path $configPath -Encoding ASCII
         Write-Ok "config.bat created successfully: $finalRemotePath"
         Write-Host ''
     }

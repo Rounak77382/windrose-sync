@@ -19,7 +19,11 @@ function Get-RemoteLock {
     $localPath  = Join-Path $cfg.WorkRoot 'server-status.json'
     $remotePath = "$($cfg.RcloneRemote)/server-status.json"
 
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     rclone copyto $remotePath $localPath 2>$null
+    $ErrorActionPreference = $oldPreference
+
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $localPath)) { return $null }
 
     try   { return Get-Content $localPath -Raw | ConvertFrom-Json }

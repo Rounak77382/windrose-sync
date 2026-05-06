@@ -10,8 +10,8 @@ if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"
 
 rem ----- Auto-detected paths (do not edit unless your layout is unusual) -----
 set "SERVER_ROOT=%APP_ROOT%\WindowsServer"
-set "SAVE_PACKAGE=%SERVER_ROOT%\R5\Saved\SaveProfiles\Default"
-set "SERVER_DESCRIPTION_FILE=%SERVER_ROOT%\ServerDescription.json"
+set "SAVE_PACKAGE=%SERVER_ROOT%\R5\Saved\SaveProfiles\Default\RocksDB\0.10.0\Worlds\9CAE9313A57648C7CDB9CEEFAD57104D"
+set "SERVER_DESCRIPTION_FILE=%SERVER_ROOT%\R5\ServerDescription.json"
 set "WORK_ROOT=%APP_ROOT%\work"
 set "LOCAL_BACKUP_DIR=%WORK_ROOT%\local-backups"
 

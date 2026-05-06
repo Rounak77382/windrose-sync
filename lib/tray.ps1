@@ -11,7 +11,8 @@ Add-Type -AssemblyName System.Drawing
 function Show-SyncTray {
     param(
         [Parameter(Mandatory)][string]$LogPath,
-        [Parameter(Mandatory)][string]$AppRoot
+        [Parameter(Mandatory)][string]$AppRoot,
+        [int]$ServicePid
     )
 
     $icon = [System.Windows.Forms.NotifyIcon]::new()
@@ -54,8 +55,11 @@ function Show-SyncTray {
         if ($res -eq 'Yes') {
             $icon.Visible = $false
             $icon.Dispose()
-            # Find and kill the parent powershell process running the sync
-            # This is a bit aggressive but ensures the lock is released if main.ps1 is running.
+            # Stop the parent sync service process if it is running
+            if ($ServicePid) {
+                Stop-Process -Id $ServicePid -Force -ErrorAction SilentlyContinue
+            }
+            # Stop the tray process itself
             Stop-Process -Id $PID
         }
     })

@@ -11,5 +11,5 @@ if /i not "%CONFIRM%"=="YES" (
   pause
   exit /b 0
 )
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& { . '%~dp0lib\lock.ps1'; $cfg = Get-Config '%~dp0'; Release-Lock $cfg; Write-Host '[OK] Lock released.' }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& { . '%~dp0lib\config.ps1'; . '%~dp0lib\lock.ps1'; $cfg = Get-Config '%~dp0'; Release-Lock $cfg; Write-Host '[OK] Lock released.' }"
 pause

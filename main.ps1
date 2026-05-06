@@ -29,20 +29,10 @@ if (-not $ServiceMode) {
     # 2. Clear old session log
     " " | Out-File -FilePath $Global:LogPath -Force -Encoding UTF8
     
-    # 3. Start the Background Service
-    Write-Step "Initializing Background Sync Service..."
-    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-File", "`"$PSCommandPath`"", "-ServiceMode"
-    
-    Write-Host ""
-    Write-Host "  [TIP] You can close this window at any time." -ForegroundColor Gray
-    Write-Host "        The sync will continue in the system tray." -ForegroundColor Gray
-    Write-Host ""
-    
-    # 4. Tail Logs
-    Start-Sleep -Seconds 2
-    if (Test-Path $Global:LogPath) {
-        Get-Content -Path $Global:LogPath -Wait -Tail 100
-    }
+    # 3. Launch Control Panel GUI
+    Write-Step "Launching Control Panel..."
+    $guiScript = Join-Path $ROOT 'lib\gui.ps1'
+    Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -Command `"& '$guiScript' -AppRoot '$ROOT' -LogPath '$Global:LogPath'`""
     exit 0
 }
 
@@ -50,7 +40,7 @@ if (-not $ServiceMode) {
 try {
     # 1. Start the Tray Icon
     $trayScript = Join-Path $ROOT 'lib\tray.ps1'
-    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-Command", ". `"$trayScript`"; Show-SyncTray -LogPath `"$Global:LogPath`" -AppRoot `"$ROOT`""
+    $trayProc = Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-Command", ". `"$trayScript`"; Show-SyncTray -LogPath `"$Global:LogPath`" -AppRoot `"$ROOT`" -ServicePid $PID" -PassThru
 
     # 2. Standard Workflow (Non-interactive)
     $cfg = Get-Config $ROOT
@@ -89,8 +79,14 @@ try {
     Write-Ok 'Session complete. Sync service stopping.'
     
     Start-Sleep -Seconds 5
+    if ($trayProc) {
+        Stop-Process -Id $trayProc.Id -Force -ErrorAction SilentlyContinue
+    }
 }
 catch {
     Write-Err "Service Critical Failure: $($_.Exception.Message)"
     $_.ScriptStackTrace | Out-File -FilePath (Join-Path $WORK 'error.log') -Append
+    if ($trayProc) {
+        Stop-Process -Id $trayProc.Id -Force -ErrorAction SilentlyContinue
+    }
 }
