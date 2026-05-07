@@ -1,96 +1,142 @@
-# windrose-sync
+<p align="center">
+  <img src="assets/logo.svg" alt="Windrose Sync Logo" width="150" height="150" />
+</p>
 
-> **Host Windrose with your friends, one at a time, on any PC — same world, always in sync.**
+<h1 align="center">Windrose Sync</h1>
 
-A lightweight, premium Python full-stack automation bundle. End users open **one file** — everything else is handled via a gorgeous native Desktop Control Panel.
+<p align="center">
+  <strong>Host Windrose with your friends, one at a time, on any PC — same world, always in sync.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Framework-PyQt6-blueviolet?style=for-the-badge" alt="PyQt6" />
+  <img src="https://img.shields.io/badge/Design-Glassmorphism-brightgreen?style=for-the-badge" alt="Glassmorphism" />
+  <img src="https://img.shields.io/badge/Font-PT_Sans-gold?style=for-the-badge" alt="PT Sans" />
+  <img src="https://img.shields.io/badge/Platform-Windows_11-blue?style=for-the-badge" alt="Windows 11" />
+</p>
 
 ---
 
-## Quick start
+## 🌌 Overview
 
-1. Put the `WindroseSyncApp` folder anywhere on your PC.
-2. Drop the `WindowsServer` folder inside it (same level as `main.py`).
-3. Ensure you have Python installed. Install dependencies:
+**Windrose Sync** is a professional, high-performance, full-stack automation server-hosting suite for Windrose. It replaces complex manual server management with a stunning, glassmorphic desktop control panel built on **PyQt6** and **Pillow**. 
+
+It handles everything natively and silently: remote sync locks, automated world save package packaging (ZIP), Google Drive cloud syncing (via rclone), and fully headless background process spawning.
+
+---
+
+## ✨ Features
+
+* 💎 **Premium Glassmorphic Design:** A state-of-the-art semi-transparent, blurred user interface styled around a rich deep sea abyss and gold theme, with pixel-perfect alpha blending.
+* 🛑 **Dedicated Stealth Server Execution:** Runs your Unreal Engine dedicated server in a 100% headless, invisible background process—eliminating annoying empty command console windows.
+* 🅰️ **Dynamic Font Bootstrapping:** Automatically downloads and registers **PT Sans** directly from Google Fonts on first boot. Zero local installation required.
+* 🎮 **Interactive Game Launching:** Pick your game executable with a native Windows `QFileDialog` on first click, saving it to local configuration for instant future access.
+* ☁️ **Dynamic Cloud Directories:** Directly queries `rclone` in non-blocking background threads to retrieve the universal web link to your cloud sync folder.
+* 📂 **Native Directory Navigation:** Launches a native Windows File Explorer navigated exactly to your `WindowsServer` directory with a single click.
+
+---
+
+## 🛰️ Architecture & Workflow
+
+```mermaid
+sequenceDiagram
+    participant User as Control Panel (PyQt6 GUI)
+    participant Core as Core Logic & rclone
+    participant GDrive as Google Drive Cloud
+    participant Server as Unreal Engine Dedicated Server
+
+    User->>Core: Click "Start Server & Sync"
+    Core->>GDrive: Acquire remote lock (prevent double hosting)
+    alt Lock is Active (Busy)
+        GDrive-->>User: Signal Busy (Blocks Startup)
+    else Lock Acquired (Idle)
+        Core->>GDrive: Restore latest snapshot (ZIP)
+        GDrive-->>Core: Download and unzip world save
+        Core->>Server: Spawn Headless Server Process (CREATE_NO_WINDOW)
+        Note over Server: Server runs invisibly, logs piped to GUI in real-time
+        Server-->>User: Player session runs...
+        User->>Server: Click "Stop Safely"
+        Server->>Core: Save & Shutdown gracefully
+        Core->>GDrive: Upload new world snapshot (ZIP)
+        Core->>GDrive: Release remote lock
+        Core-->>User: Signal Idle (Sync Complete)
+    end
+```
+
+---
+
+## 📂 Project Structure
+
+The project has been restructured to separate visual styles and assets into professional subdirectories:
+
+```
+windrose-sync/
+├── assets/
+│   ├── logo.svg              <- Vibrant brand logo (standard HEX vectors)
+│   └── windrose_wallpaper.png <- High-resolution background wallpaper
+├── core/
+│   ├── config.py             <- Dynamic configuration parser & auto-save engine
+│   ├── lock.py               <- Cloud-level lock manager (rclone)
+│   ├── server.py             <- Invisible subprocess server execution manager
+│   └── snapshot.py           <- High-performance compression & sync engine
+├── ui/
+│   ├── fonts/
+│   │   ├── PT_Sans-Web-Regular.ttf <- Google Font (Regular)
+│   │   └── PT_Sans-Web-Bold.ttf    <- Google Font (Bold)
+│   ├── __init__.py           
+│   ├── theme.py              <- Modular QSS stylesheet & Font Bootstrapper
+│   └── window.py             <- Glassmorphic Layout & alpha-composition rendering
+├── config.json               <- Local configuration parameters (GAME_EXE path)
+├── main.py                   <- Application Entrypoint (QApplication bootstrap)
+├── cli.py                    <- Full-featured administrative CLI tool
+└── requirements.txt          <- Project dependencies
+```
+
+---
+
+## 🚀 Quick Start
+
+### 📋 Prerequisites
+1. Ensure you have **Python 3.10+** installed on your system.
+2. Drop your `WindowsServer` executable folder inside the root directory (`windrose-sync/WindowsServer`).
+
+### 📦 Installation
+1. Clone or download this repository.
+2. Open your terminal in the root directory and install the optimized dependencies:
    ```cmd
    pip install -r requirements.txt
    ```
-4. Start the application:
-   ```cmd
-   python main.py
-   ```
-   It will launch the native Control Panel GUI.
+
+### ⚡ Run
+Run the application to launch the control panel:
+```cmd
+python main.py
+```
+*On first startup, the app will automatically download PT Sans fonts and register them globally.*
 
 ---
 
-## How it works
+## 🛠️ Administrative CLI (`cli.py`)
 
-```
-  python main.py
-       |
-       v
-  main.py  (CustomTkinter Native GUI App)
-       |
-       |-- core/config.py     reads config.json -> dynamic config object
-       |-- core/lock.py       remote lock on Google Drive (using rclone)
-       |-- core/snapshot.py   upload / restore world saves (zip & rclone)
-       `-- core/server.py     threaded game server manager (auto-detect exe, live log stream)
-
-  Flow:
-  [1] Dependency check  (config, rclone, WindowsServer folder)
-  [2] Acquire lock      <- blocks if another friend is already hosting
-  [3] Restore save      <- pulls latest snapshot from Google Drive
-  [4] Start server      <- players join, session runs, logs piped directly to GUI text box
-  [5] Upload snapshot   <- new timestamped save pushed to Google Drive
-  [6] Release lock      <- next friend can now host
-```
-
----
-
-## Folder layout
-
-```
-WindroseSyncApp/
-├── main.py                 <- Central FastAPI app (Start here!)
-├── cli.py                  <- Command-line utility helper
-├── config.json             <- Your local config
-├── requirements.txt        <- Python dependencies
-├── core/
-│   ├── config.py           
-│   ├── lock.py             
-│   ├── snapshot.py         
-│   └── server.py           
-└── WindowsServer/          <- Your Windrose server folder (NOT in git)
-```
-
----
-
-## Utility commands (cli.py)
-
-You can perform administrative actions via the command line with `cli.py`:
+For advanced administrative actions, you can query or unlock the system directly from the command line:
 
 | Command | Action |
 |---|---|
-| `python cli.py status` | Check who is currently hosting before you try to start |
-| `python cli.py unlock` | Clear a stuck lock after a crash |
-| `python cli.py upload` | Re-upload last save without starting the server |
-| `python cli.py restore` | Pull the latest save without starting the server |
+| `python cli.py status` | Check current remote lock status before hosting |
+| `python cli.py unlock` | Force clear a stuck lock after a system crash |
+| `python cli.py upload` | Force compress and upload a snapshot without starting the server |
+| `python cli.py restore` | Pull the latest save snapshot without starting the server |
 
 ---
 
-## Crash recovery
+## 📜 Shared-Hosting Rules
 
-If a host's PC crashes mid-session, the lock stays `running`. Any friend can clear it using **`python cli.py unlock`** or directly via the **Force Unlock** button on the Control Panel!
-
----
-
-## Shared-hosting rules
-
-1. **One host at a time** — the lock enforces this automatically.
-2. **Do not close the Control Panel/server while uploading** — wait for the upload complete log to show.
-3. **If the lock gets stuck** after a crash, use the Control Panel's unlock button or run `python cli.py unlock`.
+1. **One Host at a Time:** The lock engine strictly enforces a single active host. Never attempt to force-unlock if another player is legitimately active.
+2. **Graceful Terminations:** Always use **Stop Safely** to close the server. This ensures all player saves are properly flushed, zipped, uploaded, and the lock is clean.
+3. **Emergency Recovers:** If a host's machine crashes mid-session, the status stays `Running`. Any player can clear this by clicking **Force Unlock** inside the GUI or running `python cli.py unlock`.
 
 ---
 
-## License
+## 📄 License
 
-MIT — free to use, modify, and share.
+Distributed under the **MIT License**. Free to use, modify, and distribute universally.
