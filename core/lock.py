@@ -49,17 +49,27 @@ def acquire_lock(cfg):
     with open(local_path, "w", encoding="utf-8") as f:
         json.dump(lock_data, f, indent=2)
 
-    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True, creationflags=_NO_WINDOW)
+    subprocess.run(["rclone", "copyto", str(local_path), remote_path, "--ignore-times"], check=True, creationflags=_NO_WINDOW)
 
 def release_lock(cfg):
-    lock_data = {
-        "status": "idle"
-    }
-
     local_path = cfg["WorkRoot"] / "server-status.json"
     remote_path = f"{cfg['RcloneRemote']}/server-status.json"
-    
-    with open(local_path, "w", encoding="utf-8") as f:
-        json.dump(lock_data, f, indent=2)
 
-    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True, creationflags=_NO_WINDOW)
+    # Try to delete the remote lock file cleanly to release lock
+    try:
+        subprocess.run(["rclone", "deletefile", remote_path], check=True, creationflags=_NO_WINDOW)
+    except Exception:
+        # Fallback to writing idle status with ignore-times if delete fails
+        lock_data = {
+            "status": "idle"
+        }
+        with open(local_path, "w", encoding="utf-8") as f:
+            json.dump(lock_data, f, indent=2)
+        subprocess.run(["rclone", "copyto", str(local_path), remote_path, "--ignore-times"], check=True, creationflags=_NO_WINDOW)
+
+    # Clean up local file
+    if local_path.exists():
+        try:
+            local_path.unlink()
+        except:
+            pass
