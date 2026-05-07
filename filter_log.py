@@ -40,15 +40,25 @@ IMPORTANT_PATTERNS = [
     ("SERVER",   re.compile(r"Server initialized\.", re.I)),
     ("SERVER",   re.compile(r"Host server is ready", re.I)),
 
-    # Player join / leave events
+    # Player join / leave events — full lifecycle
     ("PLAYER",   re.compile(r"NotifyAcceptedConnection|NotifyAcceptingConnection accepted", re.I)),
-    ("PLAYER",   re.compile(r"Login request:|AddClientConnection:", re.I)),
+    ("PLAYER",   re.compile(r"Login request:", re.I)),
     ("PLAYER",   re.compile(r"UE account verified|Client connection verified", re.I)),
-    ("PLAYER",   re.compile(r"ServerAccount\. Change state.*BLConnected|OnCoopAccountBLConnected", re.I)),
-    ("PLAYER",   re.compile(r"OnAccountBLConnected|Account.*BLConnected", re.I)),
-    ("PLAYER",   re.compile(r"Process AddPlayer|OnAddPlayer", re.I)),
-    ("PLAYER",   re.compile(r"NetConn.*closed|ClientDiscon|Disconnect.*player|player.*disconnect", re.I)),
-    ("PLAYER",   re.compile(r"FarewellReason|Lost connection", re.I)),
+    ("PLAYER",   re.compile(r"OnCoopAccountBLConnected|OnAccountBLConnected", re.I)),
+    # Player fully loaded into world
+    ("PLAYER",   re.compile(r"OnAccountUeLogin|UE login\. AccountId", re.I)),
+    ("PLAYER",   re.compile(r"OnPlayerStateReplicateAccountId.*Account connected", re.I)),
+    ("PLAYER",   re.compile(r"OnPlayerIsReady|Player is ready\. AccountId", re.I)),
+    ("PLAYER",   re.compile(r"OnClientIsReady|Client id ReadyToPlay", re.I)),
+    # Player session summary lines ("Name 'X'. AccountId 'Y'. State 'Z'")
+    ("PLAYER",   re.compile(r"Name '.*?'\. AccountId '.*?'\. State '", re.I)),
+    # Player disconnect / farewell
+    ("PLAYER",   re.compile(r"OnAccountFarewell|Account farewell received", re.I)),
+    ("PLAYER",   re.compile(r"MoveAccountToListOfDisconnected|Account disconnected\..*AccountId", re.I)),
+    ("PLAYER",   re.compile(r"OnAccountBLDisconnected|OnAccountUeDisconnected", re.I)),
+    ("PLAYER",   re.compile(r"DisconnectAccount.*AccountId", re.I)),
+    ("PLAYER",   re.compile(r"OnCoopProxyServer::OnAccountDisconnected|Inform Cm\..*FarewellReason", re.I)),
+    ("PLAYER",   re.compile(r"Lost connection|NetConn.*closed", re.I)),
     ("PLAYER",   re.compile(r"Server\. Change state.*=>.*WaitingForFirstAccount|ReadyForTerrainGeneration|TerrainGeneration", re.I)),
 
     # Save / backup events
@@ -89,7 +99,7 @@ SUPPRESS_PATTERNS = [
     re.compile(r"R5LogNetCm: Verbose", re.I), # verbose CM stream chatter
     re.compile(r"R5LogNetBL:.*PushTransaction.*Skip client document", re.I),
     re.compile(r"R5LogBLService:.*RegisterService", re.I),
-    re.compile(r"R5LogDataKeeper: Verbose", re.I),
+    re.compile(r"R5LogDataKeeper: Verbose:.*(?!OnAccountUeLogin|OnPlayerIsReady|Player is ready|ReserveCoop|SetAccountId|OnCoopAccountBLConnected)", re.I),  # suppress most verbose but key ones pass through above
     re.compile(r"R5LogBLDalAQ", re.I),
     re.compile(r"R5LogBLVersionator", re.I),
     re.compile(r"LogUObjectHash", re.I),
