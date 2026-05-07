@@ -9,17 +9,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Framework-PyQt6-blueviolet?style=for-the-badge" alt="PyQt6" />
-  <img src="https://img.shields.io/badge/Design-Glassmorphism-brightgreen?style=for-the-badge" alt="Glassmorphism" />
-  <img src="https://img.shields.io/badge/Font-PT_Sans-gold?style=for-the-badge" alt="PT Sans" />
-  <img src="https://img.shields.io/badge/Platform-Windows_11-blue?style=for-the-badge" alt="Windows 11" />
+  <a href="#-overview"><img src="https://img.shields.io/badge/Framework-PyQt6-blueviolet?style=for-the-badge" alt="PyQt6" /></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/Design-Glassmorphism-brightgreen?style=for-the-badge" alt="Glassmorphism" /></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/Font-PT_Sans-gold?style=for-the-badge" alt="PT Sans" /></a>
+  <a href="#-quick-start--multiplayer-setup"><img src="https://img.shields.io/badge/Platform-Windows_11-blue?style=for-the-badge" alt="Windows 11" /></a>
 </p>
 
 ---
 
 ## 🌌 Overview
 
-**Windrose Sync** is a professional, high-performance, full-stack automation server-hosting suite for Windrose. It replaces complex manual server management with a stunning, glassmorphic desktop control panel built on **PyQt6** and **Pillow**. 
+**Windrose Sync** is a professional, high-performance, full-stack automation server-hosting suite for Windrose. It replaces complex manual server management with a stunning, glassmorphic desktop control panel built on **PyQt6** and **Pillow**.
 
 It handles everything natively and silently: remote sync locks, automated world save package packaging (ZIP), Google Drive cloud syncing (via rclone), and fully headless background process spawning.
 
@@ -83,7 +83,7 @@ windrose-sync/
 │   ├── fonts/
 │   │   ├── PT_Sans-Web-Regular.ttf <- Google Font (Regular)
 │   │   └── PT_Sans-Web-Bold.ttf    <- Google Font (Bold)
-│   ├── __init__.py           
+│   ├── __init__.py         
 │   ├── theme.py              <- Modular QSS stylesheet & Font Bootstrapper
 │   └── window.py             <- Glassmorphic Layout & alpha-composition rendering
 ├── config.json               <- Local configuration parameters (GAME_EXE path)
@@ -116,7 +116,7 @@ windrose-sync/
 
 ### 🤝 Part 2: For Friends (The Co-Hosts)
 
-1. **Add the Google Drive Shortcut (CRUCIAL):** 
+1. **Add the Google Drive Shortcut (CRUCIAL):**
    - Open Google Drive in your web browser.
    - Go to the **"Shared with me"** tab on the left.
    - Right-click the shared `WindroseSync` folder.
@@ -134,12 +134,12 @@ You are now fully synced! Either of you can click **"Start Server & Sync"** to h
 
 For advanced administrative actions, you can query or unlock the system directly from the command line:
 
-| Command | Action |
-|---|---|
-| `python cli.py status` | Check current remote lock status before hosting |
-| `python cli.py unlock` | Force clear a stuck lock after a system crash |
-| `python cli.py upload` | Force compress and upload a snapshot without starting the server |
-| `python cli.py restore` | Pull the latest save snapshot without starting the server |
+| Command                   | Action                                                           |
+| ------------------------- | ---------------------------------------------------------------- |
+| `python cli.py status`  | Check current remote lock status before hosting                  |
+| `python cli.py unlock`  | Force clear a stuck lock after a system crash                    |
+| `python cli.py upload`  | Force compress and upload a snapshot without starting the server |
+| `python cli.py restore` | Pull the latest save snapshot without starting the server        |
 
 ---
 
