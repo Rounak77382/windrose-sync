@@ -94,6 +94,16 @@ windrose-sync/
 
 ---
 
+## 🤝 How to Share with Friends
+
+To allow your friends to host and sync the exact same world, you just need to share the Google Drive folder:
+
+1. **Share the Folder:** Go to your Google Drive and share the `WindroseSync` folder with your friend's Google account.
+2. **Add Shortcut (Crucial Step):** Your friend must go to their Google Drive dashboard, navigate to **"Shared with me"**, right-click the `WindroseSync` folder, and select **"Organize" > "Add shortcut" > "My Drive"**.
+3. **Connect:** When your friend runs this app and sets up `rclone`, their system will automatically follow the shortcut from their My Drive natively into your shared directory!
+
+---
+
 ## 🚀 Quick Start
 
 ### 📋 Prerequisites
