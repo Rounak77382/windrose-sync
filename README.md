@@ -64,7 +64,7 @@ It handles everything natively and silently: remote sync locks, automated world 
    ```cmd
    python main.py
    ```
-5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. In the **Server Directory Path**, browse or paste the location of your `WindowsServer` folder which is found inside your `%game directory%\R5\Builds\WindowsServer\`. Click **Save & Continue**.
 6. **Create the Cloud Folder:** The app will automatically create a `WindroseSync` folder in your Google Drive root when you first sync.
 7. **Share with Friends:** Go to Google Drive in your web browser. Right-click the `WindroseSync` folder and share it with your friends' Google accounts. **CRUCIAL:** You must explicitly change their permission from *Viewer* to **Editor** so they can upload saves!
 
@@ -78,7 +78,7 @@ It handles everything natively and silently: remote sync locks, automated world 
 2. **Folder Setup:** Clone or extract this repository to your PC.
 3. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal.
 4. **Launch the App:** Run `python main.py`.
-5. **Connect:** When the First-Time Wizard appears, click **"Auto-Setup Google Drive"** and authorize *your own* Google account. Set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+5. **Connect:** When the First-Time Wizard appears, click **"Auto-Setup Google Drive"** and authorize *your own* Google account. Set the Remote Name to `gdrive:WindroseSync`. In the **Server Directory Path**, browse or paste the location of your `WindowsServer` folder which is found inside your `%game directory%\R5\Builds\WindowsServer\`. Click **Save & Continue**.
 
 You are now fully synced! Either of you can click **"Start Server & Sync"** to host the world seamlessly!
 

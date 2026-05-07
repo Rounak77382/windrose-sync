@@ -18,9 +18,9 @@ Welcome to the very first release of Windrose Sync! This tool replaces complex m
 
 1. Download the portable zip file from the downloads table below.
 2. Extract the **entire `.zip` folder** to your desktop or desired location. *(Do not move the `.exe` out of its folder!)*
-3. Drop your game's `WindowsServer` directory directly inside the same folder as `WindroseSync.exe`.
+3. Place or link your game's `WindowsServer` directory (found inside `%game directory%\R5\Builds\WindowsServer\`) directly next to `WindroseSync.exe`.
 4. Run `WindroseSync.exe`.
-5. When the setup wizard appears, follow the on-screen instructions to automatically link your Google Drive!
+5. When the setup wizard appears, follow the on-screen instructions to automatically link your Google Drive and select the correct `WindowsServer` directory!
 
 > 📖 **Need more help?** See the [full installation guide](https://github.com/Rounak77382/windrose-sync?tab=readme-ov-file#-quick-start--multiplayer-setup) for detailed setup instructions.
 
