@@ -119,8 +119,14 @@ def load_pt_sans():
     from pathlib import Path
     from PyQt6.QtGui import QFontDatabase
     
-    font_dir = Path(__file__).parent / "fonts"
-    font_dir.mkdir(exist_ok=True)
+    import sys
+    
+    if getattr(sys, 'frozen', False):
+        font_dir = Path(sys._MEIPASS) / "ui" / "fonts"
+    else:
+        font_dir = Path(__file__).parent / "fonts"
+        
+    font_dir.mkdir(parents=True, exist_ok=True)
     
     regular_path = font_dir / "PT_Sans-Web-Regular.ttf"
     bold_path = font_dir / "PT_Sans-Web-Bold.ttf"

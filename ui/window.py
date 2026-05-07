@@ -1,6 +1,7 @@
 # ui/window.py
 
 from pathlib import Path
+import sys
 from PIL import Image, ImageFilter
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -67,7 +68,13 @@ class MainWindow(QMainWindow):
         header_layout = QHBoxLayout(self.header_frame)
         header_layout.setContentsMargins(20, 0, 20, 0)
         
-        logo_path = Path(__file__).parent.parent / "assets" / "logo.svg"
+        # Support for PyInstaller dynamic paths
+        if getattr(sys, 'frozen', False):
+            base_dir = Path(sys._MEIPASS)
+        else:
+            base_dir = Path(__file__).parent.parent
+            
+        logo_path = base_dir / "assets" / "logo.svg"
         if logo_path.exists():
             self.logo_lbl = QLabel()
             # Scale logo to 60x60 to make it bigger and use QPixmap directly to preserve original red colors

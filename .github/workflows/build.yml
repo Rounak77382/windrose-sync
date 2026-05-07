@@ -1,0 +1,48 @@
+name: Build Portable Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger this workflow only when a tag like v1.0.0 is pushed
+
+jobs:
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build Portable Directory (PyInstaller)
+      run: |
+        # --noconfirm: overwrite output dir
+        # --onedir: create a portable directory instead of one file (faster launch, easier to debug)
+        # --windowed: run without opening a console window
+        # --add-data: bundle the assets and ui folders
+        pyinstaller --noconfirm --onedir --windowed --name WindroseSync --add-data "assets;assets" --add-data "ui;ui" main.py
+
+    - name: Package Release (ZIP)
+      run: |
+        # We zip the output directory so users can easily download and extract it
+        Compress-Archive -Path dist/WindroseSync/* -DestinationPath WindroseSync-Portable-Windows.zip
+
+    - name: Create GitHub Release & Upload Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: WindroseSync-Portable-Windows.zip
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

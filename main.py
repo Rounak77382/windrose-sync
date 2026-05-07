@@ -12,6 +12,18 @@ from core.lock import get_remote_lock, acquire_lock, release_lock
 from core.snapshot import restore_snapshot, upload_snapshot
 from core.server import start_game_server, stop_game_server, ensure_world_exists
 
+def get_app_root() -> Path:
+    """Returns the directory containing the executable, or the script directory."""
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+def get_asset_root() -> Path:
+    """Returns the _internal data directory for PyInstaller, or script directory."""
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).parent
+
 class FirstTimeSetupDialog(QDialog):
     def __init__(self, parent=None, app_root=None):
         super().__init__(parent)
@@ -103,7 +115,8 @@ class App(MainWindow):
         self.sync_thread = None
         
         # Check for first-time setup
-        config_file = Path(__file__).parent / 'config.json'
+        app_root = get_app_root()
+        config_file = app_root / 'config.json'
         needs_setup = False
         if not config_file.exists():
             needs_setup = True
@@ -118,11 +131,11 @@ class App(MainWindow):
                 needs_setup = True
                 
         if needs_setup:
-            setup = FirstTimeSetupDialog(self, Path(__file__).parent)
+            setup = FirstTimeSetupDialog(self, app_root)
             setup.exec()
         
         try:
-            self.app_cfg = get_config(Path(__file__).parent)
+            self.app_cfg = get_config(app_root)
         except Exception as e:
             print(f"Error loading config: {e}")
 
