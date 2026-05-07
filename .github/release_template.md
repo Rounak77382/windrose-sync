@@ -1,14 +1,16 @@
-## 🎉 Version [Version] – What's New
+## 🎉 Version 1.0.0 – Initial Release
 
-### ✨ New Features
+Welcome to the very first release of Windrose Sync! This tool replaces complex manual server management with a stunning, highly automated desktop control panel.
 
-- ⚙️ **Feature Name** — Description of the new feature.
-- ⚙️ **Feature Name** — Description of the new feature.
+### ✨ Main Features
 
-### 🐛 Bug Fixes & Under the Hood
-
-- **Bug Fix Name** — Description of the bug fix.
-- **Bug Fix Name** — Description of the bug fix.
+- 💎 **Premium Glassmorphic Design** — A state-of-the-art semi-transparent, blurred user interface styled around a rich deep sea abyss and gold theme.
+- 🛑 **Dedicated Stealth Server Execution** — Runs your Unreal Engine dedicated server in a 100% headless, invisible background process—no annoying console windows.
+- 🔒 **Smart Sync Locks** — Automatically locks your Google Drive while hosting to prevent your friends from accidentally overwriting the world save at the same time.
+- ⚡ **Automated World Packaging** — Zips and compresses your local `SaveProfiles` into high-performance snapshot files for rapid cloud uploading.
+- 🪄 **Hands-Free Setup Wizard** — A built-in configuration wizard that natively connects to Google Drive, downloads required dependencies (`rclone`), and sets up paths with zero manual work.
+- 🅰️ **Dynamic Font Bootstrapping** — Automatically downloads and registers premium Google Fonts on boot without needing local system installation.
+- 🎮 **Interactive Utilities** — Launch your local game directly from the app, open your server folder, or browse your cloud drive with one click.
 
 ### 📥 Installation
 
