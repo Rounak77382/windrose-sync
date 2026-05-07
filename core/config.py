@@ -31,7 +31,12 @@ def get_config(app_root: Path) -> dict:
         except Exception:
             pass
 
-    server_root = app_root / "WindowsServer"
+    server_root_str = config_data.get("SERVER_ROOT", "")
+    if server_root_str and Path(server_root_str).exists():
+        server_root = Path(server_root_str)
+    else:
+        server_root = app_root / "WindowsServer"
+        
     save_package = server_root / "R5" / "Saved" / "SaveProfiles"
     worlds_dir = save_package / "Default" / "RocksDB" / "0.10.0" / "Worlds"
     server_desc_file = server_root / "R5" / "ServerDescription.json"

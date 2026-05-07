@@ -3,14 +3,84 @@ import threading
 import queue
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication, QFileDialog
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6.QtWidgets import QApplication, QFileDialog, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
+from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 
 from ui import MainWindow, theme_colors, load_pt_sans
 from core.config import get_config, save_config_value
 from core.lock import get_remote_lock, acquire_lock, release_lock
 from core.snapshot import restore_snapshot, upload_snapshot
 from core.server import start_game_server, stop_game_server, ensure_world_exists
+
+class FirstTimeSetupDialog(QDialog):
+    def __init__(self, parent=None, app_root=None):
+        super().__init__(parent)
+        self.app_root = app_root
+        self.setWindowTitle("Windrose Sync - First Time Setup")
+        self.setFixedSize(550, 350)
+        self.setStyleSheet("background-color: #0F1E24; color: #F4F0EA; font-family: 'PT Sans'; font-size: 14px;")
+        
+        layout = QVBoxLayout(self)
+        
+        lbl_title = QLabel("Welcome to Windrose Sync!")
+        lbl_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #D99B26;")
+        lbl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(lbl_title)
+        
+        layout.addSpacing(15)
+        
+        # Rclone Remote Setup
+        layout.addWidget(QLabel("Google Drive Remote Name (e.g. gdrive:WindroseSync):"))
+        self.remote_input = QLineEdit("gdrive:WindroseSync")
+        self.remote_input.setStyleSheet("background-color: #17303A; padding: 5px; border-radius: 3px;")
+        layout.addWidget(self.remote_input)
+        
+        btn_auth = QPushButton("Authenticate Google Drive (Opens Terminal)")
+        btn_auth.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_auth.setStyleSheet("background-color: #17303A; padding: 8px; border: 1px solid #48C0A4;")
+        btn_auth.clicked.connect(self.run_rclone_config)
+        layout.addWidget(btn_auth)
+        
+        layout.addSpacing(15)
+        
+        # Server Directory
+        layout.addWidget(QLabel("Server Directory Path (where Windrose Server is located):"))
+        dir_layout = QHBoxLayout()
+        self.dir_input = QLineEdit(str(app_root / "WindowsServer"))
+        self.dir_input.setStyleSheet("background-color: #17303A; padding: 5px; border-radius: 3px;")
+        dir_layout.addWidget(self.dir_input)
+        
+        btn_browse = QPushButton("Browse...")
+        btn_browse.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_browse.setStyleSheet("background-color: #17303A; padding: 5px; border: 1px solid #48C0A4;")
+        btn_browse.clicked.connect(self.browse_dir)
+        dir_layout.addWidget(btn_browse)
+        
+        layout.addLayout(dir_layout)
+        
+        layout.addStretch()
+        
+        btn_save = QPushButton("Save && Continue")
+        btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_save.setStyleSheet("background-color: #48C0A4; color: #000; font-weight: bold; padding: 10px; border-radius: 5px;")
+        btn_save.clicked.connect(self.save_and_close)
+        layout.addWidget(btn_save)
+        
+    def run_rclone_config(self):
+        import os
+        os.system('start cmd /k "rclone config"')
+        
+    def browse_dir(self):
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Server Directory", str(self.app_root))
+        if dir_path:
+            self.dir_input.setText(dir_path)
+            
+    def save_and_close(self):
+        save_config_value(self.app_root, "RCLONE_REMOTE", self.remote_input.text().strip())
+        save_config_value(self.app_root, "SERVER_ROOT", self.dir_input.text().strip())
+        # Set flag to avoid showing again
+        save_config_value(self.app_root, "SETUP_COMPLETE", "true")
+        self.accept()
 
 class App(MainWindow):
     # Define thread-safe signals
@@ -24,6 +94,25 @@ class App(MainWindow):
         self.app_cfg = None
         self.log_queue = queue.Queue()
         self.sync_thread = None
+        
+        # Check for first-time setup
+        config_file = Path(__file__).parent / 'config.json'
+        needs_setup = False
+        if not config_file.exists():
+            needs_setup = True
+        else:
+            try:
+                import json
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if data.get("SETUP_COMPLETE") != "true":
+                        needs_setup = True
+            except Exception:
+                needs_setup = True
+                
+        if needs_setup:
+            setup = FirstTimeSetupDialog(self, Path(__file__).parent)
+            setup.exec()
         
         try:
             self.app_cfg = get_config(Path(__file__).parent)
