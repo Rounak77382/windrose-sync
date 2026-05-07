@@ -174,9 +174,68 @@ class App(MainWindow):
         self.log_queue.put(f"[SYNC] {msg}")
 
     def poll_logs(self):
+        import filter_log
+        import html
+
+        HTML_COLORS = {
+            "STARTUP":  "#48C0A4",
+            "MAP":      "#3A86C8",
+            "SERVER":   "#92C353",
+            "PLAYER":   "#D99B26",
+            "SAVE":     "#AF6EAF",
+            "ERROR":    "#E05C5C",
+            "WARNING":  "#D99B26",
+            "STEAM":    "#808080",
+            "SHUTDOWN": "#E05C5C",
+            "SYNC":     "#48C0A4",
+            "SYNC-ERR": "#E05C5C",
+        }
+
         while not self.log_queue.empty():
             msg = self.log_queue.get()
-            self.log_textbox.append(msg)
+            
+            # Handle [SYNC] or [SYNC-ERR] prefixes
+            if msg.startswith("[SYNC] "):
+                line_content = msg[len("[SYNC] "):]
+                html_msg = f'<span style="color: #48C0A4; font-weight: bold;">[SYNC]</span> <span style="color: #F4F0EA;">{html.escape(line_content)}</span>'
+                self.log_textbox.append(html_msg)
+                self.log_textbox.ensureCursorVisible()
+                continue
+            elif msg.startswith("[SYNC-ERR] "):
+                line_content = msg[len("[SYNC-ERR] "):]
+                html_msg = f'<span style="color: #E05C5C; font-weight: bold;">[SYNC-ERR]</span> <span style="color: #E05C5C;">{html.escape(line_content)}</span>'
+                self.log_textbox.append(html_msg)
+                self.log_textbox.ensureCursorVisible()
+                continue
+            
+            # Handle [SERVER] or [SERVER-ERR] prefixes
+            is_server = msg.startswith("[SERVER] ")
+            is_server_err = msg.startswith("[SERVER-ERR] ")
+            
+            if is_server or is_server_err:
+                prefix_len = len("[SERVER] ") if is_server else len("[SERVER-ERR] ")
+                line_content = msg[prefix_len:]
+                
+                # Apply filter_log suppression
+                if any(sp.search(line_content) for sp in filter_log.SUPPRESS_PATTERNS):
+                    continue
+                
+                # Apply filter_log important pattern matching
+                matched = False
+                for tag, pattern in filter_log.IMPORTANT_PATTERNS:
+                    if pattern.search(line_content):
+                        color = HTML_COLORS.get(tag, "#F4F0EA")
+                        html_msg = f'<span style="color: {color}; font-weight: bold;">[{tag:<8}]</span> <span style="color: #F4F0EA;">{html.escape(line_content)}</span>'
+                        self.log_textbox.append(html_msg)
+                        matched = True
+                        break
+                
+                if matched:
+                    self.log_textbox.ensureCursorVisible()
+                continue
+            
+            # Fallback for any other messages
+            self.log_textbox.append(html.escape(msg))
             self.log_textbox.ensureCursorVisible()
 
     def auto_poll_status(self):
