@@ -43,6 +43,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: WindroseSync-Portable-Windows.zip
-        generate_release_notes: true
+        body_path: .github/release_template.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
