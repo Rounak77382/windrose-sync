@@ -174,7 +174,7 @@ def filter_log(log_path: Path):
             if pattern.search(line):
                 color = COLORS.get(tag, "") if use_color else ""
                 reset = COLORS["RESET"] if use_color else ""
-                label = f"[{tag:<8}]"
+                label = f"[{tag}]"
                 buffer.append(f"{color}{label} {line}{reset}")
                 shown += 1
                 break

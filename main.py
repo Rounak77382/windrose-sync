@@ -225,7 +225,7 @@ class App(MainWindow):
                 for tag, pattern in filter_log.IMPORTANT_PATTERNS:
                     if pattern.search(line_content):
                         color = HTML_COLORS.get(tag, "#F4F0EA")
-                        html_msg = f'<span style="color: {color}; font-weight: bold;">[{tag:<8}]</span> <span style="color: #F4F0EA;">{html.escape(line_content)}</span>'
+                        html_msg = f'<span style="color: {color}; font-weight: bold;">[{tag}]</span> <span style="color: #F4F0EA;">{html.escape(line_content)}</span>'
                         self.log_textbox.append(html_msg)
                         matched = True
                         break
