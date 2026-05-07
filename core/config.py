@@ -1,8 +1,45 @@
 import os
 import json
 from pathlib import Path
+import urllib.request
+import zipfile
+import shutil
+
+def ensure_rclone_installed(app_root: Path):
+    bin_dir = app_root / "bin"
+    rclone_exe = bin_dir / "rclone.exe"
+    
+    if rclone_exe.exists():
+        return
+        
+    print("rclone.exe not found. Downloading and installing automatically...")
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    
+    zip_path = bin_dir / "rclone.zip"
+    url = "https://downloads.rclone.org/rclone-current-windows-amd64.zip"
+    
+    try:
+        # Download rclone zip
+        urllib.request.urlretrieve(url, zip_path)
+        
+        # Extract rclone.exe from ZIP on the fly
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for file_info in zip_ref.infolist():
+                if file_info.filename.endswith("rclone.exe"):
+                    with zip_ref.open(file_info) as source, open(rclone_exe, "wb") as target:
+                        shutil.copyfileobj(source, target)
+                    break
+                    
+        # Cleanup ZIP file
+        zip_path.unlink()
+        print("rclone.exe successfully installed to bin/ folder!")
+    except Exception as e:
+        print(f"Error automatically downloading rclone: {e}")
 
 def get_config(app_root: Path) -> dict:
+    # Ensure rclone is installed
+    ensure_rclone_installed(app_root)
+
     # Add bundled bin to PATH so rclone can be resolved
     bin_dir = str(app_root / "bin")
     if bin_dir not in os.environ.get("PATH", ""):
