@@ -18,12 +18,13 @@
 ---
 
 ## 📌 Table of Contents
+
 * [🌌 Overview](#-overview)
 * [✨ Features](#-features)
-* [🚀 Quick Start & Multiplayer Setup](#-quick-start--multiplayer-setup)
+* [🚀 Quick Start &amp; Multiplayer Setup](#-quick-start--multiplayer-setup)
   * [👑 Part 1: For the Server Creator (The Original Host)](#-part-1-for-the-server-creator-the-original-host)
   * [🤝 Part 2: For Friends (The Co-Hosts)](#-part-2-for-friends-the-co-hosts)
-* [🛰️ Architecture & Workflow](#️-architecture--workflow)
+* [🛰️ Architecture &amp; Workflow](#️-architecture--workflow)
 * [📂 Project Structure](#-project-structure)
 * [🛠️ Administrative CLI (`cli.py`)](#️-administrative-cli-clipy)
 * [📜 Shared-Hosting Rules](#-shared-hosting-rules)
@@ -66,8 +67,6 @@ It handles everything natively and silently: remote sync locks, automated world 
 5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
 6. **Create the Cloud Folder:** The app will automatically create a `WindroseSync` folder in your Google Drive root when you first sync.
 7. **Share with Friends:** Go to Google Drive in your web browser. Right-click the `WindroseSync` folder and share it with your friends' Google accounts. **CRUCIAL:** You must explicitly change their permission from *Viewer* to **Editor** so they can upload saves!
-
----
 
 ### 🤝 Part 2: For Friends (The Co-Hosts)
 
@@ -132,7 +131,7 @@ windrose-sync/
 │   ├── fonts/
 │   │   ├── PT_Sans-Web-Regular.ttf <- Google Font (Regular)
 │   │   └── PT_Sans-Web-Bold.ttf    <- Google Font (Bold)
-│   ├── __init__.py         
+│   ├── __init__.py       
 │   ├── theme.py              <- Modular QSS stylesheet & Font Bootstrapper
 │   └── window.py             <- Glassmorphic Layout & alpha-composition rendering
 ├── config.json               <- Local configuration parameters (GAME_EXE path)
