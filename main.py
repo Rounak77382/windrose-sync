@@ -12,19 +12,18 @@ from core.server import start_game_server, stop_game_server, ensure_world_exists
 
 # --- Theme Configuration ---
 ctk.set_appearance_mode("dark")
-# A nautical/windrose theme color set
-# Navy Blue background, gold/bronze accents
+# A nautical/windrose theme color set (Sunbaked Caribbean & Sea-Weathered Wood)
 theme_colors = {
-    "bg_main": "#0B132B",
-    "bg_panel": "#1C2541",
-    "accent_gold": "#D4AF37",
-    "accent_gold_hover": "#B5952F",
-    "danger": "#E63946",
-    "danger_hover": "#C92C38",
-    "text_main": "#EAEAEA",
-    "text_muted": "#8D99AE",
-    "status_idle": "#06D6A0",
-    "status_running": "#FFD166"
+    "bg_main": "#0F1E24",       # Deep sea abyss
+    "bg_panel": "#17303A",      # Weathered hull deep teal-grey
+    "accent_gold": "#D99B26",    # Sunbaked brass gold
+    "accent_gold_hover": "#B87F1A",
+    "danger": "#9B2226",        # Crimson sailor's blood red
+    "danger_hover": "#AE2012",
+    "text_main": "#F4F0EA",      # Bleached driftwood parchment
+    "text_muted": "#9FB1B7",    # Sea-salted muted teal-grey
+    "status_idle": "#48C0A4",    # Tropical sea foam green
+    "status_running": "#FFCC00"  # Brilliant caribbean sun yellow
 }
 
 class App(ctk.CTk):
@@ -111,8 +110,8 @@ class App(ctk.CTk):
         
         self.log_textbox = ctk.CTkTextbox(
             self.logs_frame, 
-            fg_color="#0A0F1C", 
-            text_color="#00FF41", 
+            fg_color="#0A1418", 
+            text_color="#48C0A4", 
             font=ctk.CTkFont(family="Consolas", size=12),
             wrap="word"
         )
