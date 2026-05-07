@@ -26,9 +26,11 @@ Welcome to the very first release of Windrose Sync! This tool replaces complex m
 
 ### 📥 Downloads
 
-| File                                  | Platform    | Note                 |
+| File                                  | Platform    | Checksum                 |
 | ------------------------------------- | ----------- | ------------------------ |
-| `WindroseSync-Portable-Windows.zip` | x64 Windows | Portable Directory (No Installation Required) |
+| [WindroseSync-Portable-Windows.zip](https://github.com/Rounak77382/windrose-sync/releases/latest/download/WindroseSync-Portable-Windows.zip) | x64 Windows | [checksum](https://github.com/Rounak77382/windrose-sync/releases/latest/download/WindroseSync-Portable-Windows.zip.sha256) |
+
+> To verify the download on Windows, run `certutil -hashfile <filename> SHA256` and compare it with the `.sha256` file.
 
 ---
 

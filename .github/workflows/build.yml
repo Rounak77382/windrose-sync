@@ -34,15 +34,19 @@ jobs:
         # --add-data: bundle the assets and ui folders
         pyinstaller --noconfirm --onedir --windowed --name WindroseSync --add-data "assets;assets" --add-data "ui;ui" main.py
 
-    - name: Package Release (ZIP)
+    - name: Package Release (ZIP) & Checksum
       run: |
-        # We zip the output directory so users can easily download and extract it
+        # Zip the output directory
         Compress-Archive -Path dist/WindroseSync/* -DestinationPath WindroseSync-Portable-Windows.zip
+        # Generate the SHA256 checksum file
+        certutil -hashfile WindroseSync-Portable-Windows.zip SHA256 > WindroseSync-Portable-Windows.zip.sha256
 
     - name: Create GitHub Release & Upload Asset
       uses: softprops/action-gh-release@v1
       with:
-        files: WindroseSync-Portable-Windows.zip
+        files: |
+          WindroseSync-Portable-Windows.zip
+          WindroseSync-Portable-Windows.zip.sha256
         body_path: .github/release_template.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
