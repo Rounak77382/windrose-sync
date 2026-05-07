@@ -3,6 +3,7 @@ import threading
 import time
 import queue
 from pathlib import Path
+from PIL import Image, ImageFilter
 import customtkinter as ctk
 
 from core.config import get_config
@@ -44,6 +45,7 @@ class App(ctk.CTk):
             print(f"Error loading config: {e}")
 
         self.setup_ui()
+        self.load_background()
         self.after(100, self.poll_logs)
         self.after(500, self.auto_poll_status)
 
@@ -208,6 +210,24 @@ class App(ctk.CTk):
                 pass
         finally:
             self.btn_start.configure(state="normal")
+    def load_background(self):
+        bg_path = Path(__file__).parent / "windrose_wallpaper.png"
+        if bg_path.exists():
+            try:
+                original = Image.open(bg_path)
+                resized = original.resize((900, 600), Image.Resampling.LANCEZOS if hasattr(Image, 'Resampling') else Image.ANTIALIAS)
+                blurred = resized.filter(ImageFilter.GaussianBlur(15))
+                
+                # Composite a dark translucent navy/teal overlay for readability
+                overlay = Image.new("RGBA", blurred.size, (15, 30, 36, 180))
+                composed = Image.alpha_composite(blurred.convert("RGBA"), overlay)
+                
+                self.bg_ctk_img = ctk.CTkImage(light_image=composed, dark_image=composed, size=(900, 600))
+                self.bg_label = ctk.CTkLabel(self, image=self.bg_ctk_img, text="")
+                self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                self.bg_label.lower()
+            except Exception as e:
+                print(f"Error loading background image: {e}")
 
 if __name__ == "__main__":
     app = App()
