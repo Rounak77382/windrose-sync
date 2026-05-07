@@ -20,11 +20,11 @@
 ## 📌 Table of Contents
 * [🌌 Overview](#-overview)
 * [✨ Features](#-features)
-* [🛰️ Architecture & Workflow](#️-architecture--workflow)
-* [📂 Project Structure](#-project-structure)
 * [🚀 Quick Start & Multiplayer Setup](#-quick-start--multiplayer-setup)
   * [👑 Part 1: For the Server Creator (The Original Host)](#-part-1-for-the-server-creator-the-original-host)
   * [🤝 Part 2: For Friends (The Co-Hosts)](#-part-2-for-friends-the-co-hosts)
+* [🛰️ Architecture & Workflow](#️-architecture--workflow)
+* [📂 Project Structure](#-project-structure)
 * [🛠️ Administrative CLI (`cli.py`)](#️-administrative-cli-clipy)
 * [📜 Shared-Hosting Rules](#-shared-hosting-rules)
 
@@ -46,6 +46,42 @@ It handles everything natively and silently: remote sync locks, automated world 
 * 🎮 **Interactive Game Launching:** Pick your game executable with a native Windows `QFileDialog` on first click, saving it to local configuration for instant future access.
 * ☁️ **Dynamic Cloud Directories:** Directly queries `rclone` in non-blocking background threads to retrieve the universal web link to your cloud sync folder.
 * 📂 **Native Directory Navigation:** Launches a native Windows File Explorer navigated exactly to your `WindowsServer` directory with a single click.
+
+---
+
+## 🚀 Quick Start & Multiplayer Setup
+
+### 👑 Part 1: For the Server Creator (The Original Host)
+
+1. **Prerequisites:** Ensure you have **Python 3.10+** installed.
+2. **Folder Setup:** Clone or extract this repository.
+3. **Install Dependencies:** Open your terminal in the root directory and run:
+   ```cmd
+   pip install -r requirements.txt
+   ```
+4. **Launch the App:**
+   ```cmd
+   python main.py
+   ```
+5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+6. **Create the Cloud Folder:** The app will automatically create a `WindroseSync` folder in your Google Drive root when you first sync.
+7. **Share with Friends:** Go to Google Drive in your web browser. Right-click the `WindroseSync` folder and share it with your friends' Google accounts. **CRUCIAL:** You must explicitly change their permission from *Viewer* to **Editor** so they can upload saves!
+
+---
+
+### 🤝 Part 2: For Friends (The Co-Hosts)
+
+1. **Add the Google Drive Shortcut (CRUCIAL):**
+   - Open Google Drive in your web browser.
+   - Go to the **"Shared with me"** tab on the left.
+   - Right-click the shared `WindroseSync` folder.
+   - Select **"Organize" > "Add shortcut" > "My Drive"**. *(Without this, rclone cannot sync the files!)*
+2. **Folder Setup:** Clone or extract this repository to your PC.
+3. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal.
+4. **Launch the App:** Run `python main.py`.
+5. **Connect:** When the First-Time Wizard appears, click **"Auto-Setup Google Drive"** and authorize *your own* Google account. Set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+
+You are now fully synced! Either of you can click **"Start Server & Sync"** to host the world seamlessly!
 
 ---
 
@@ -104,42 +140,6 @@ windrose-sync/
 ├── cli.py                    <- Full-featured administrative CLI tool
 └── requirements.txt          <- Project dependencies
 ```
-
----
-
-## 🚀 Quick Start & Multiplayer Setup
-
-### 👑 Part 1: For the Server Creator (The Original Host)
-
-1. **Prerequisites:** Ensure you have **Python 3.10+** installed.
-2. **Folder Setup:** Clone or extract this repository.
-3. **Install Dependencies:** Open your terminal in the root directory and run:
-   ```cmd
-   pip install -r requirements.txt
-   ```
-4. **Launch the App:**
-   ```cmd
-   python main.py
-   ```
-5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
-6. **Create the Cloud Folder:** The app will automatically create a `WindroseSync` folder in your Google Drive root when you first sync.
-7. **Share with Friends:** Go to Google Drive in your web browser. Right-click the `WindroseSync` folder and share it with your friends' Google accounts. **CRUCIAL:** You must explicitly change their permission from *Viewer* to **Editor** so they can upload saves!
-
----
-
-### 🤝 Part 2: For Friends (The Co-Hosts)
-
-1. **Add the Google Drive Shortcut (CRUCIAL):**
-   - Open Google Drive in your web browser.
-   - Go to the **"Shared with me"** tab on the left.
-   - Right-click the shared `WindroseSync` folder.
-   - Select **"Organize" > "Add shortcut" > "My Drive"**. *(Without this, rclone cannot sync the files!)*
-2. **Folder Setup:** Clone or extract this repository to your PC.
-3. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal.
-4. **Launch the App:** Run `python main.py`.
-5. **Connect:** When the First-Time Wizard appears, click **"Auto-Setup Google Drive"** and authorize *your own* Google account. Set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
-
-You are now fully synced! Either of you can click **"Start Server & Sync"** to host the world seamlessly!
 
 ---
 
