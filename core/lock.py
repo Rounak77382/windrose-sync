@@ -6,6 +6,9 @@ from pathlib import Path
 import socket
 import getpass
 
+# Suppress console windows when run as a frozen (PyInstaller) EXE
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+
 def get_remote_lock(cfg):
     work_root = cfg["WorkRoot"]
     work_root.mkdir(parents=True, exist_ok=True)
@@ -14,7 +17,7 @@ def get_remote_lock(cfg):
 
     # rclone copyto
     try:
-        subprocess.run(["rclone", "copyto", remote_path, str(local_path)], capture_output=True, check=True)
+        subprocess.run(["rclone", "copyto", remote_path, str(local_path)], capture_output=True, check=True, creationflags=_NO_WINDOW)
     except subprocess.CalledProcessError:
         return None
 
@@ -46,7 +49,7 @@ def acquire_lock(cfg):
     with open(local_path, "w", encoding="utf-8") as f:
         json.dump(lock_data, f, indent=2)
 
-    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True)
+    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True, creationflags=_NO_WINDOW)
 
 def release_lock(cfg):
     lock_data = {
@@ -59,4 +62,4 @@ def release_lock(cfg):
     with open(local_path, "w", encoding="utf-8") as f:
         json.dump(lock_data, f, indent=2)
 
-    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True)
+    subprocess.run(["rclone", "copyto", str(local_path), remote_path], check=True, creationflags=_NO_WINDOW)

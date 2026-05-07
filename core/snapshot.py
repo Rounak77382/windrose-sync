@@ -5,6 +5,9 @@ import datetime
 import json
 from pathlib import Path
 
+# Suppress console windows when run as a frozen (PyInstaller) EXE
+_NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+
 def upload_snapshot(cfg):
     worlds_dir = cfg["WorldsDir"]
     if not worlds_dir.exists():
@@ -48,12 +51,12 @@ def upload_snapshot(cfg):
         json.dump(meta, f, indent=2)
 
     remote_dir = f"{cfg['RemoteSnapshotsDir']}/{timestamp}"
-    subprocess.run(["rclone", "copy", str(staging_dir), remote_dir, "--create-empty-src-dirs"], check=True)
+    subprocess.run(["rclone", "copy", str(staging_dir), remote_dir, "--create-empty-src-dirs"], check=True, creationflags=_NO_WINDOW)
 
     latest_file = work_root / "latest.txt"
     with open(latest_file, "w") as f:
         f.write(timestamp)
-    subprocess.run(["rclone", "copyto", str(latest_file), f"{cfg['RemoteSnapshotsDir']}/latest.txt"], check=True)
+    subprocess.run(["rclone", "copyto", str(latest_file), f"{cfg['RemoteSnapshotsDir']}/latest.txt"], check=True, creationflags=_NO_WINDOW)
 
     return timestamp
 
@@ -64,7 +67,7 @@ def restore_snapshot(cfg):
 
     latest_local = downloads_dir / "latest.txt"
     try:
-        subprocess.run(["rclone", "copyto", f"{cfg['RemoteSnapshotsDir']}/latest.txt", str(latest_local)], check=True, capture_output=True)
+        subprocess.run(["rclone", "copyto", f"{cfg['RemoteSnapshotsDir']}/latest.txt", str(latest_local)], check=True, capture_output=True, creationflags=_NO_WINDOW)
     except subprocess.CalledProcessError:
         return "skipped"
 
@@ -82,7 +85,7 @@ def restore_snapshot(cfg):
         shutil.rmtree(snap_local)
     snap_local.mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["rclone", "copy", f"{cfg['RemoteSnapshotsDir']}/{snapshot_name}", str(snap_local), "--create-empty-src-dirs"], check=True)
+    subprocess.run(["rclone", "copy", f"{cfg['RemoteSnapshotsDir']}/{snapshot_name}", str(snap_local), "--create-empty-src-dirs"], check=True, creationflags=_NO_WINDOW)
 
     # Find the zip file (representing the world ID) in the snapshot
     zip_files = list(snap_local.glob("*.zip"))
