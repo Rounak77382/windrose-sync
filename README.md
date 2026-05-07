@@ -94,35 +94,39 @@ windrose-sync/
 
 ---
 
-## 🤝 How to Share with Friends
+## 🚀 Quick Start & Multiplayer Setup
 
-To allow your friends to host and sync the exact same world, you just need to share the Google Drive folder:
+### 👑 Part 1: For the Server Creator (The Original Host)
 
-1. **Share the Folder:** Go to your Google Drive and share the `WindroseSync` folder with your friend's Google account.
-2. **Add Shortcut (Crucial Step):** Your friend must go to their Google Drive dashboard, navigate to **"Shared with me"**, right-click the `WindroseSync` folder, and select **"Organize" > "Add shortcut" > "My Drive"**.
-3. **Connect:** When your friend runs this app and sets up `rclone`, their system will automatically follow the shortcut from their My Drive natively into your shared directory!
-
----
-
-## 🚀 Quick Start
-
-### 📋 Prerequisites
-1. Ensure you have **Python 3.10+** installed on your system.
-2. Drop your `WindowsServer` executable folder inside the root directory (`windrose-sync/WindowsServer`).
-
-### 📦 Installation
-1. Clone or download this repository.
-2. Open your terminal in the root directory and install the optimized dependencies:
+1. **Prerequisites:** Ensure you have **Python 3.10+** installed.
+2. **Folder Setup:** Clone or extract this repository.
+3. **Install Dependencies:** Open your terminal in the root directory and run:
    ```cmd
    pip install -r requirements.txt
    ```
+4. **Launch the App:**
+   ```cmd
+   python main.py
+   ```
+5. **First-Time Wizard:** The setup wizard will appear. Click **"Auto-Setup Google Drive"**, authorize your account, and set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+6. **Create the Cloud Folder:** The app will automatically create a `WindroseSync` folder in your Google Drive root when you first sync.
+7. **Share with Friends:** Go to Google Drive in your web browser. Right-click the `WindroseSync` folder and share it with your friends' Google accounts. **CRUCIAL:** You must explicitly change their permission from *Viewer* to **Editor** so they can upload saves!
 
-### ⚡ Run
-Run the application to launch the control panel:
-```cmd
-python main.py
-```
-*On first startup, the app will automatically download PT Sans fonts and register them globally.*
+---
+
+### 🤝 Part 2: For Friends (The Co-Hosts)
+
+1. **Add the Google Drive Shortcut (CRUCIAL):** 
+   - Open Google Drive in your web browser.
+   - Go to the **"Shared with me"** tab on the left.
+   - Right-click the shared `WindroseSync` folder.
+   - Select **"Organize" > "Add shortcut" > "My Drive"**. *(Without this, rclone cannot sync the files!)*
+2. **Folder Setup:** Clone or extract this repository to your PC.
+3. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal.
+4. **Launch the App:** Run `python main.py`.
+5. **Connect:** When the First-Time Wizard appears, click **"Auto-Setup Google Drive"** and authorize *your own* Google account. Set the Remote Name to `gdrive:WindroseSync`. Click **Save & Continue**.
+
+You are now fully synced! Either of you can click **"Start Server & Sync"** to host the world seamlessly!
 
 ---
 
