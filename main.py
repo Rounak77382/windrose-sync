@@ -35,7 +35,7 @@ class FirstTimeSetupDialog(QDialog):
         self.remote_input.setStyleSheet("background-color: #17303A; padding: 5px; border-radius: 3px;")
         layout.addWidget(self.remote_input)
         
-        btn_auth = QPushButton("Authenticate Google Drive (Opens Terminal)")
+        btn_auth = QPushButton("Auto-Setup Google Drive (Opens Browser)")
         btn_auth.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_auth.setStyleSheet("background-color: #17303A; padding: 8px; border: 1px solid #48C0A4;")
         btn_auth.clicked.connect(self.run_rclone_config)
@@ -68,7 +68,12 @@ class FirstTimeSetupDialog(QDialog):
         
     def run_rclone_config(self):
         import os
-        os.system('start cmd /k "rclone config"')
+        remote_full = self.remote_input.text().strip()
+        remote_name = remote_full.split(':')[0] if ':' in remote_full else "gdrive"
+        
+        # Completely automate rclone setup, forcing it to natively sync with "Shared with me" folders
+        cmd = f'start cmd /k "echo Setting up Google Drive Remote ({remote_name})... && rclone config create {remote_name} drive scope drive shared_with_me true && echo. && echo Authentication Complete! You may close this window. && pause"'
+        os.system(cmd)
         
     def browse_dir(self):
         dir_path = QFileDialog.getExistingDirectory(self, "Select Server Directory", str(self.app_root))
