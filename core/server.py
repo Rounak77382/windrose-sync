@@ -24,8 +24,8 @@ def start_game_server(cfg, log_queue: queue.Queue):
         exe_file = server_exes[0] if server_exes else exes[0]
 
     args = cfg["ServerArgs"].split() if cfg["ServerArgs"] else []
-    if "-log" not in args:
-        args.append("-log")
+    if "-log" in args:
+        args.remove("-log")
 
     server_log_out = cfg["WorkRoot"] / "server.log"
     server_log_err = cfg["WorkRoot"] / "server.err"
@@ -89,24 +89,50 @@ def ensure_world_exists(cfg, log_queue: queue.Queue):
     if has_world():
         return
 
-    log_queue.put("[SYNC] No local world found. Generating a new world...")
-    bat_file = cfg["ServerRoot"] / "StartServerForeground.bat"
+    log_queue.put("[SYNC] No local world found. Generating a new world in the background...")
     
-    if bat_file.exists():
-        log_queue.put(f"[SYNC] Running {bat_file.name} to generate world...")
-        subprocess.Popen(["cmd.exe", "/c", str(bat_file)], cwd=str(cfg["ServerRoot"]))
-        
-        # Wait until a world is created
-        for _ in range(60): # wait up to 60 seconds
-            time.sleep(1)
-            if has_world():
-                log_queue.put("[SYNC] New world detected! Letting it initialize for 5s...")
-                time.sleep(5)
-                break
-        
-        # Close the server
-        log_queue.put("[SYNC] Closing server after world generation...")
-        stop_game_server()
-        time.sleep(3)
-    else:
-        log_queue.put("[SYNC-ERR] StartServerForeground.bat not found, cannot auto-generate world.")
+    # Run the server directly in background to generate world (avoiding batch file 'start' popups)
+    shipping_path = cfg["ServerRoot"] / "R5" / "Binaries" / "Win64" / "WindroseServer-Win64-Shipping.exe"
+    exe_file = shipping_path
+    if not exe_file.exists():
+        exes = list(cfg["ServerRoot"].rglob("*.exe"))
+        server_exes = [e for e in exes if 'server' in e.name.lower() and 'shipping' in e.name.lower()]
+        if server_exes:
+            exe_file = server_exes[0]
+        elif exes:
+            exe_file = exes[0]
+        else:
+            log_queue.put("[SYNC-ERR] No server executable found. Cannot generate world.")
+            return
+
+    log_queue.put(f"[SYNC] Running {exe_file.name} to generate world...")
+    
+    args = cfg["ServerArgs"].split() if cfg["ServerArgs"] else []
+    if "-log" in args:
+        args.remove("-log")
+
+    creationflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    proc = subprocess.Popen(
+        [str(exe_file)] + args,
+        cwd=str(cfg["ServerRoot"]),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=creationflags
+    )
+    
+    # Wait until a world is created
+    for _ in range(60): # wait up to 60 seconds
+        time.sleep(1)
+        if has_world():
+            log_queue.put("[SYNC] New world detected! Letting it initialize for 5s...")
+            time.sleep(5)
+            break
+    
+    # Close the server
+    log_queue.put("[SYNC] Closing background generation process...")
+    try:
+        proc.terminate()
+        proc.wait(timeout=5)
+    except:
+        proc.kill()
+    time.sleep(3)

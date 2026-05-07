@@ -52,5 +52,22 @@ def get_config(app_root: Path) -> dict:
         "RcloneRemote": rclone_remote,
         "RemoteSnapshotsDir": remote_snapshots_dir,
         "ServerArgs": config_data.get("SERVER_ARGS", ""),
+        "GameExe": config_data.get("GAME_EXE", ""),
     }
+
+def save_config_value(app_root: Path, key: str, value: str):
+    config_path = app_root / 'config.json'
+    config_data = {}
+    if config_path.exists():
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+        except Exception:
+            pass
+    config_data[key] = value
+    try:
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=4)
+    except Exception:
+        pass
 
