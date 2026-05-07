@@ -71,8 +71,10 @@ class FirstTimeSetupDialog(QDialog):
         remote_full = self.remote_input.text().strip()
         remote_name = remote_full.split(':')[0] if ':' in remote_full else "gdrive"
         
-        # Completely automate rclone setup, forcing it to natively sync with "Shared with me" folders
-        cmd = f'start cmd /k "echo Setting up Google Drive Remote ({remote_name})... && rclone config create {remote_name} drive scope drive shared_with_me true && echo. && echo Authentication Complete! You may close this window. && pause"'
+        # Automate rclone setup (standard Drive connection)
+        # Note: shared_with_me=true is omitted because it causes write/upload permission bugs.
+        # Users MUST use the Google Drive 'Add shortcut' method to upload to shared folders.
+        cmd = f'start cmd /k "echo Setting up Google Drive Remote ({remote_name})... && rclone config create {remote_name} drive scope drive && echo. && echo Authentication Complete! You may close this window. && pause"'
         os.system(cmd)
         
     def browse_dir(self):

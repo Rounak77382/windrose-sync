@@ -1,6 +1,19 @@
 config.bat
+config.json
 work/
-*.tmp
 WindowsServer/
 bin/
+
+# Dynamic Assets
+ui/fonts/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs & Temp
 *.log
+*.tmp
+.DS_Store
