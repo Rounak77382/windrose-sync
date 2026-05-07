@@ -128,6 +128,7 @@ SUPPRESS_PATTERNS = [
     re.compile(r"LogReplicationGraph:   Leaked actor:", re.I),  # noise, not critical
     re.compile(r"R5LogCoopProxy: Verbose.*SetState.*=>", re.I),  # low level state
     re.compile(r"R5LogNetCm:.*SetState", re.I),
+    re.compile(r"gRPC sets env variable", re.I),
     re.compile(r"R5LogGameInitTracker", re.I),
     re.compile(r"R5LogWorldGeneratorSubsystem", re.I),
     re.compile(r"LogAndroidPermission|LogSockets: SteamSockets", re.I),
