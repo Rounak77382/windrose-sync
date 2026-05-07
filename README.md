@@ -9,11 +9,24 @@
 </p>
 
 <p align="center">
-  <a href="#-overview"><img src="https://img.shields.io/badge/Framework-PyQt6-blueviolet?style=for-the-badge" alt="PyQt6" /></a>
-  <a href="#-features"><img src="https://img.shields.io/badge/Design-Glassmorphism-brightgreen?style=for-the-badge" alt="Glassmorphism" /></a>
-  <a href="#-features"><img src="https://img.shields.io/badge/Font-PT_Sans-gold?style=for-the-badge" alt="PT Sans" /></a>
-  <a href="#-quick-start--multiplayer-setup"><img src="https://img.shields.io/badge/Platform-Windows_11-blue?style=for-the-badge" alt="Windows 11" /></a>
+  <img src="https://img.shields.io/badge/Framework-PyQt6-blueviolet?style=for-the-badge" alt="PyQt6" />
+  <img src="https://img.shields.io/badge/Design-Glassmorphism-brightgreen?style=for-the-badge" alt="Glassmorphism" />
+  <img src="https://img.shields.io/badge/Font-PT_Sans-gold?style=for-the-badge" alt="PT Sans" />
+  <img src="https://img.shields.io/badge/Platform-Windows_11-blue?style=for-the-badge" alt="Windows 11" />
 </p>
+
+---
+
+## 📌 Table of Contents
+* [🌌 Overview](#-overview)
+* [✨ Features](#-features)
+* [🛰️ Architecture & Workflow](#️-architecture--workflow)
+* [📂 Project Structure](#-project-structure)
+* [🚀 Quick Start & Multiplayer Setup](#-quick-start--multiplayer-setup)
+  * [👑 Part 1: For the Server Creator (The Original Host)](#-part-1-for-the-server-creator-the-original-host)
+  * [🤝 Part 2: For Friends (The Co-Hosts)](#-part-2-for-friends-the-co-hosts)
+* [🛠️ Administrative CLI (`cli.py`)](#️-administrative-cli-clipy)
+* [📜 Shared-Hosting Rules](#-shared-hosting-rules)
 
 ---
 
