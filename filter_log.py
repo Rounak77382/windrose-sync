@@ -42,6 +42,8 @@ IMPORTANT_PATTERNS = [
 
     # Player join / leave events — full lifecycle
     ("PLAYER",   re.compile(r"NotifyAcceptedConnection|NotifyAcceptingConnection accepted", re.I)),
+    ("PLAYER",   re.compile(r"ReserveCoop|Reserve slot for Coop account", re.I)),
+    ("PLAYER",   re.compile(r"OnConnectVerified|Client connection verified successfully", re.I)),
     ("PLAYER",   re.compile(r"Login request:", re.I)),
     ("PLAYER",   re.compile(r"UE account verified|Client connection verified", re.I)),
     ("PLAYER",   re.compile(r"OnCoopAccountBLConnected|OnAccountBLConnected", re.I)),
@@ -50,6 +52,8 @@ IMPORTANT_PATTERNS = [
     ("PLAYER",   re.compile(r"OnPlayerStateReplicateAccountId.*Account connected", re.I)),
     ("PLAYER",   re.compile(r"OnPlayerIsReady|Player is ready\. AccountId", re.I)),
     ("PLAYER",   re.compile(r"OnClientIsReady|Client id ReadyToPlay", re.I)),
+    # Player session summary lines
+    ("PLAYER",   re.compile(r"ServerAccount\..*AccountName '.*?'\. AccountId", re.I)),
     # Player session summary lines ("Name 'X'. AccountId 'Y'. State 'Z'")
     ("PLAYER",   re.compile(r"Name '.*?'\. AccountId '.*?'\. State '", re.I)),
     # Player disconnect / farewell
@@ -57,6 +61,8 @@ IMPORTANT_PATTERNS = [
     ("PLAYER",   re.compile(r"MoveAccountToListOfDisconnected|Account disconnected\..*AccountId", re.I)),
     ("PLAYER",   re.compile(r"OnAccountBLDisconnected|OnAccountUeDisconnected", re.I)),
     ("PLAYER",   re.compile(r"DisconnectAccount.*AccountId", re.I)),
+    ("PLAYER",   re.compile(r"ShutdownBLReactors.*AccountId", re.I)),
+    ("PLAYER",   re.compile(r"OnAccountBLDisconnected.*bDisconnected", re.I)),
     ("PLAYER",   re.compile(r"OnCoopProxyServer::OnAccountDisconnected|Inform Cm\..*FarewellReason", re.I)),
     ("PLAYER",   re.compile(r"Lost connection|NetConn.*closed", re.I)),
     ("PLAYER",   re.compile(r"Server\. Change state.*=>.*WaitingForFirstAccount|ReadyForTerrainGeneration|TerrainGeneration", re.I)),
