@@ -58,7 +58,8 @@ class FirstTimeSetupDialog(QDialog):
         # Server Directory
         layout.addWidget(QLabel("Server Directory Path (where Windrose Server is located):"))
         dir_layout = QHBoxLayout()
-        self.dir_input = QLineEdit(str(app_root / "WindowsServer"))
+        self.dir_input = QLineEdit()
+        self.dir_input.setPlaceholderText("Select or paste your WindowsServer directory (e.g. C:\\Games\\WindroseServer)")
         self.dir_input.setStyleSheet("background-color: #17303A; padding: 5px; border-radius: 3px;")
         dir_layout.addWidget(self.dir_input)
         
