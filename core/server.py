@@ -48,32 +48,44 @@ def start_game_server(cfg, log_queue: queue.Queue):
     )
 
     def tail_ue_log(log_path: Path):
-        """Tail the UE server log file in real-time and feed lines to log_queue."""
-        # Wait for the log file to appear (server takes a moment to create it)
-        for _ in range(60):
+        """Tail the UE server log file in real-time, reading from the START of the new session."""
+        # Snapshot the old file's mtime so we know when UE has created a fresh log
+        pre_mtime = log_path.stat().st_mtime if log_path.exists() else None
+
+        log_queue.put(f"[SERVER] Waiting for UE log file: {log_path}")
+
+        # Wait up to 60s for the log file to be freshly created/overwritten by UE
+        for _ in range(120):
             if log_path.exists():
-                break
+                cur_mtime = log_path.stat().st_mtime
+                # File is fresh if it's a brand new file OR mtime changed since we started
+                if pre_mtime is None or cur_mtime != pre_mtime:
+                    break
             time.sleep(0.5)
         else:
-            log_queue.put("[SERVER] WARNING: UE log file not found at expected path.")
-            return
+            log_queue.put("[SERVER] WARNING: UE log file was not refreshed within 60s. Check the server log path.")
+            if not log_path.exists():
+                return
+
+        log_queue.put(f"[SERVER] UE log detected — tailing from start of session")
 
         with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
-            # Skip existing content — only show new lines from this run
-            f.seek(0, 2)  # Seek to end of file
+            # Read from the BEGINNING of the fresh log (position 0)
             while server_process.poll() is None:
                 line = f.readline()
                 if line:
-                    msg = f"[SERVER] {line.rstrip()}"
-                    log_queue.put(msg)
+                    stripped = line.rstrip()
+                    if stripped:  # skip blank lines
+                        log_queue.put(f"[SERVER] {stripped}")
                 else:
-                    time.sleep(0.1)
+                    time.sleep(0.05)
             # Drain any remaining lines after process exits
             for line in f:
                 if line.strip():
                     log_queue.put(f"[SERVER] {line.rstrip()}")
 
     threading.Thread(target=tail_ue_log, args=(ue_log_path,), daemon=True).start()
+
 
     server_process.wait()
     return server_process.returncode
