@@ -92,6 +92,12 @@ class MainWindow(QMainWindow):
         
         header_layout.addStretch()
         
+        self.players_lbl = QLabel("")
+        players_font = QFont("PT Sans", 12, QFont.Weight.Bold)
+        self.players_lbl.setFont(players_font)
+        self.players_lbl.setStyleSheet("color: #48C0A4; border: none; margin-right: 15px;")
+        header_layout.addWidget(self.players_lbl)
+        
         self.status_lbl = QLabel("● Checking status...")
         status_font = QFont("PT Sans", 12, QFont.Weight.Bold)
         self.status_lbl.setFont(status_font)

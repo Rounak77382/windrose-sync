@@ -115,6 +115,14 @@ class App(MainWindow):
         self.log_queue = queue.Queue()
         self.sync_thread = None
         
+        self.active_players = {}
+        import re
+        self.rx_player_summary = re.compile(r"Name '(?P<name>[^']+)'.+?AccountId '(?P<id>[A-F0-9]+)'.+?State '(?P<state>[^']+)'", re.I)
+        self.rx_account_name = re.compile(r"AccountName '(?P<name>[^']+)'.+?AccountId (?P<id>[A-F0-9]+)", re.I)
+        self.rx_disconnect = re.compile(r"Disconnect.*AccountId (?P<id>[A-F0-9]+)", re.I)
+        self.rx_disconnect_alt = re.compile(r"Account disconnected\..*AccountId (?P<id>[A-F0-9]+)", re.I)
+        self.rx_farewell = re.compile(r"Account farewell received\..*AccountId (?P<id>[A-F0-9]+)", re.I)
+        
         # Check for first-time setup
         app_root = get_app_root()
         config_file = app_root / 'config.json'
@@ -173,6 +181,13 @@ class App(MainWindow):
     def log(self, msg):
         self.log_queue.put(f"[SYNC] {msg}")
 
+    def update_players_ui(self):
+        if self.active_players:
+            names = list(self.active_players.values())
+            self.players_lbl.setText(f"Players ({len(names)}): {', '.join(names)}")
+        else:
+            self.players_lbl.setText("")
+
     def poll_logs(self):
         import filter_log
         import html
@@ -215,6 +230,38 @@ class App(MainWindow):
             if is_server or is_server_err:
                 prefix_len = len("[SERVER] ") if is_server else len("[SERVER-ERR] ")
                 line_content = msg[prefix_len:]
+                
+                # Real-time Player Join/Leave tracking
+                m_summary = self.rx_player_summary.search(line_content)
+                if m_summary:
+                    p_name = m_summary.group("name")
+                    p_id = m_summary.group("id")
+                    p_state = m_summary.group("state")
+                    if p_state == "SaidFarewell":
+                        self.active_players.pop(p_id, None)
+                    else:
+                        self.active_players[p_id] = p_name
+                    self.update_players_ui()
+                else:
+                    m_name = self.rx_account_name.search(line_content)
+                    if m_name:
+                        self.active_players[m_name.group("id")] = m_name.group("name")
+                        self.update_players_ui()
+                    else:
+                        m_disc = self.rx_disconnect.search(line_content)
+                        if m_disc:
+                            self.active_players.pop(m_disc.group("id"), None)
+                            self.update_players_ui()
+                        else:
+                            m_disc_alt = self.rx_disconnect_alt.search(line_content)
+                            if m_disc_alt:
+                                self.active_players.pop(m_disc_alt.group("id"), None)
+                                self.update_players_ui()
+                            else:
+                                m_farewell = self.rx_farewell.search(line_content)
+                                if m_farewell:
+                                    self.active_players.pop(m_farewell.group("id"), None)
+                                    self.update_players_ui()
                 
                 # Apply filter_log suppression
                 if any(sp.search(line_content) for sp in filter_log.SUPPRESS_PATTERNS):
@@ -267,11 +314,15 @@ class App(MainWindow):
             self.log("Sync is already running!")
             return
         self.btn_start.setEnabled(False)
+        self.active_players.clear()
+        self.update_players_ui()
         self.sync_thread = threading.Thread(target=self.run_sync_workflow, daemon=True)
         self.sync_thread.start()
 
     def cmd_stop(self):
         self.log("Requesting server stop...")
+        self.active_players.clear()
+        self.update_players_ui()
         threading.Thread(target=stop_game_server, daemon=True).start()
 
     def cmd_unlock(self):
