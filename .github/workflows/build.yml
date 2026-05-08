@@ -38,11 +38,36 @@ jobs:
         pyinstaller --noconfirm --onedir --windowed --name WindroseSync --add-data "assets;assets" --add-data "ui;ui" main.py
 
     - name: Package Release (ZIP) & Checksum
+      id: package
+      shell: pwsh
+      env:
+        REPO: ${{ github.repository }}
+        TAG_NAME: ${{ github.ref_name }}
       run: |
         # Zip the output directory
         Compress-Archive -Path dist/WindroseSync/* -DestinationPath WindroseSync-Portable-Windows.zip
+        
         # Generate the SHA256 checksum file
-        certutil -hashfile WindroseSync-Portable-Windows.zip SHA256 > WindroseSync-Portable-Windows.zip.sha256
+        $hash = (Get-FileHash WindroseSync-Portable-Windows.zip -Algorithm SHA256).Hash.ToLower()
+        "$hash  WindroseSync-Portable-Windows.zip" | Out-File -FilePath WindroseSync-Portable-Windows.zip.sha256 -Encoding ascii
+
+        # Set output variables for template replacement
+        $filename = "WindroseSync-Portable-Windows.zip"
+        $checksumFile = "WindroseSync-Portable-Windows.zip.sha256"
+        $baseUrl = "https://github.com/$env:REPO/releases/download/$env:TAG_NAME"
+
+        "RELEASE_FILENAME=$filename"         >> $env:GITHUB_OUTPUT
+        "RELEASE_URL=$baseUrl/$filename"     >> $env:GITHUB_OUTPUT
+        "CHECKSUM_URL=$baseUrl/$checksumFile" >> $env:GITHUB_OUTPUT
+
+    - name: Generate Release Notes from Template
+      shell: pwsh
+      run: |
+        (Get-Content .github/release_template.md) `
+          -replace '<RELEASE_FILENAME>', '${{ steps.package.outputs.RELEASE_FILENAME }}' `
+          -replace '<RELEASE_URL>',      '${{ steps.package.outputs.RELEASE_URL }}' `
+          -replace '<CHECKSUM_URL>',     '${{ steps.package.outputs.CHECKSUM_URL }}' `
+        | Set-Content .github/release_notes.md
 
     - name: Create GitHub Release & Upload Asset
       uses: softprops/action-gh-release@v1
@@ -50,6 +75,6 @@ jobs:
         files: |
           WindroseSync-Portable-Windows.zip
           WindroseSync-Portable-Windows.zip.sha256
-        body_path: .github/release_template.md
+        body_path: .github/release_notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
