@@ -29,7 +29,7 @@ def start_game_server(cfg, log_queue: queue.Queue):
 
     server_log_out = cfg["WorkRoot"] / "server.log"
     server_log_err = cfg["WorkRoot"] / "server.err"
-    ue_log_path = server_root / "R5" / "Saved" / "Logs" / "WindroseServer.log"
+    ue_log_path = server_root / "R5" / "Saved" / "Logs" / "R5.log"
 
     with open(server_log_out, 'w') as f: f.write("")
     with open(server_log_err, 'w') as f: f.write("")
