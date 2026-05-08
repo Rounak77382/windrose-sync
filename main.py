@@ -182,11 +182,7 @@ class App(MainWindow):
         self.log_queue.put(f"[SYNC] {msg}")
 
     def update_players_ui(self):
-        if self.active_players:
-            names = list(self.active_players.values())
-            self.players_lbl.setText(f"Players ({len(names)}): {', '.join(names)}")
-        else:
-            self.players_lbl.setText("")
+        self.player_status.update_players(self.active_players)
 
     def poll_logs(self):
         import filter_log
@@ -234,18 +230,28 @@ class App(MainWindow):
                 # Real-time Player Join/Leave tracking
                 m_summary = self.rx_player_summary.search(line_content)
                 if m_summary:
-                    p_name = m_summary.group("name")
-                    p_id = m_summary.group("id")
+                    p_name  = m_summary.group("name")
+                    p_id    = m_summary.group("id")
                     p_state = m_summary.group("state")
                     if p_state == "SaidFarewell":
                         self.active_players.pop(p_id, None)
                     else:
-                        self.active_players[p_id] = p_name
+                        # Keep existing state (don't downgrade connected → connecting)
+                        existing = self.active_players.get(p_id, {})
+                        self.active_players[p_id] = {
+                            "name": p_name,
+                            "state": existing.get("state", "connecting")
+                        }
                     self.update_players_ui()
                 else:
                     m_name = self.rx_account_name.search(line_content)
                     if m_name:
-                        self.active_players[m_name.group("id")] = m_name.group("name")
+                        pid = m_name.group("id")
+                        # ServerAccount line = player is fully in-game
+                        self.active_players[pid] = {
+                            "name": m_name.group("name"),
+                            "state": "connected"
+                        }
                         self.update_players_ui()
                     else:
                         m_disc = self.rx_disconnect.search(line_content)

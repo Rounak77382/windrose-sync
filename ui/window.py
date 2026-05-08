@@ -5,12 +5,164 @@ import sys
 from PIL import Image, ImageFilter
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QTextEdit, QFrame
+    QLabel, QPushButton, QTextEdit, QFrame, QApplication
 )
 from PyQt6.QtGui import QPixmap, QImage, QFont, QIcon
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer, QPoint, QEvent
 
 from ui.theme import theme_colors, get_style_sheets
+
+
+class PlayerStatusWidget(QWidget):
+    """Header widget: player icon + count badge. Hover reveals a dropdown with each player's state."""
+
+    _STATE = {
+        "connecting": ("⏳", "#D99B26", "Connecting..."),
+        "connected":  ("🟢", "#48C0A4", "In Game"),
+    }
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._players = {}   # {id: {"name": str, "state": str}}
+        self._popup  = None
+
+        # Hide timer — delays hiding so mouse can move into popup
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.setInterval(120)
+        self._timer.timeout.connect(self._hide_popup)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 8, 0)
+        layout.setSpacing(5)
+
+        self.icon_lbl = QLabel("👥")
+        self.icon_lbl.setStyleSheet("border: none; font-size: 16px;")
+
+        self.badge = QLabel("0")
+        self.badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.badge.setFixedSize(22, 22)
+        self.badge.setFont(QFont("PT Sans", 9, QFont.Weight.Bold))
+        self.badge.setStyleSheet(
+            "color:#0F1E24; background:#48C0A4; border-radius:11px; border:none;"
+        )
+
+        layout.addWidget(self.icon_lbl)
+        layout.addWidget(self.badge)
+        self.setVisible(False)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    # ── public API ──────────────────────────────────────────────────────────
+    def update_players(self, players: dict):
+        self._players = dict(players)
+        n = len(players)
+        self.badge.setText(str(n))
+        self.setVisible(n > 0)
+        if self._popup and self._popup.isVisible():
+            self._show_popup()   # rebuild in-place
+
+    # ── hover logic ─────────────────────────────────────────────────────────
+    def enterEvent(self, event):
+        self._timer.stop()
+        self._show_popup()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._timer.start()
+        super().leaveEvent(event)
+
+    def eventFilter(self, obj, event):
+        """Keep popup open while mouse is inside it."""
+        if event.type() == QEvent.Type.Enter:
+            self._timer.stop()
+        elif event.type() == QEvent.Type.Leave:
+            self._timer.start()
+        return False
+
+    # ── popup build ─────────────────────────────────────────────────────────
+    def _show_popup(self):
+        if not self._players:
+            return
+        self._hide_popup()
+
+        popup = QFrame(None)
+        popup.setWindowFlags(
+            Qt.WindowType.Tool |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
+        popup.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        popup.setStyleSheet("""
+            QFrame {
+                background-color: #0F1E24;
+                border: 1px solid #48C0A4;
+                border-radius: 8px;
+            }
+            QLabel { border: none; background: transparent; }
+        """)
+
+        vbox = QVBoxLayout(popup)
+        vbox.setContentsMargins(14, 10, 16, 12)
+        vbox.setSpacing(8)
+
+        # Title
+        title = QLabel(f"Players Online")
+        title.setFont(QFont("PT Sans", 10, QFont.Weight.Bold))
+        title.setStyleSheet("color: #48C0A4;")
+        vbox.addWidget(title)
+
+        # Separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet("background:#2A4A56; max-height:1px; border:none;")
+        vbox.addWidget(sep)
+
+        for pid, info in self._players.items():
+            icon_ch, color, state_text = self._STATE.get(
+                info.get("state", "connecting"), ("⏳", "#D99B26", "Connecting..."))
+
+            row = QWidget()
+            row.setStyleSheet("background:transparent;")
+            rl = QHBoxLayout(row)
+            rl.setContentsMargins(0, 2, 0, 2)
+            rl.setSpacing(8)
+
+            ico = QLabel(icon_ch)
+            ico.setStyleSheet("font-size:14px;")
+
+            nm = QLabel(info["name"])
+            nm.setFont(QFont("PT Sans", 10, QFont.Weight.Bold))
+            nm.setStyleSheet("color:#F4F0EA;")
+
+            st = QLabel(state_text)
+            st.setFont(QFont("PT Sans", 9))
+            st.setStyleSheet(f"color:{color};")
+
+            rl.addWidget(ico)
+            rl.addWidget(nm)
+            rl.addStretch()
+            rl.addWidget(st)
+            vbox.addWidget(row)
+
+        popup.adjustSize()
+
+        # Position below the widget
+        gp = self.mapToGlobal(QPoint(0, self.height() + 4))
+        popup.move(gp)
+        popup.show()
+
+        # Install event filter on popup + children to cancel hide timer
+        popup.installEventFilter(self)
+        for child in popup.findChildren(QWidget):
+            child.installEventFilter(self)
+
+        self._popup = popup
+
+    def _hide_popup(self):
+        if self._popup:
+            self._popup.close()
+            self._popup = None
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -92,11 +244,8 @@ class MainWindow(QMainWindow):
         
         header_layout.addStretch()
         
-        self.players_lbl = QLabel("")
-        players_font = QFont("PT Sans", 12, QFont.Weight.Bold)
-        self.players_lbl.setFont(players_font)
-        self.players_lbl.setStyleSheet("color: #48C0A4; border: none; margin-right: 15px;")
-        header_layout.addWidget(self.players_lbl)
+        self.player_status = PlayerStatusWidget()
+        header_layout.addWidget(self.player_status)
         
         self.status_lbl = QLabel("● Checking status...")
         status_font = QFont("PT Sans", 12, QFont.Weight.Bold)
