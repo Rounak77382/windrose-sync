@@ -13,13 +13,40 @@ from PyQt6.QtCore import Qt, QTimer, QPoint, QEvent
 from ui.theme import theme_colors, get_style_sheets
 
 
+class PlayerIconWidget(QWidget):
+    """A premium, high-fidelity drawn vector icon representing players online."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(22, 22)
+
+    def paintEvent(self, event):
+        from PyQt6.QtGui import QPainter, QBrush, QColor, QPainterPath
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        color = QColor("#48C0A4") # Premium windrose-sync teal
+
+        # Draw Back Player (slightly offset and translucent)
+        painter.setOpacity(0.55)
+        painter.drawEllipse(3, 4, 6, 6) # head
+        path_back = QPainterPath()
+        path_back.moveTo(0, 17)
+        path_back.arcTo(0, 11, 12, 10, 0, 180)
+        path_back.lineTo(0, 17)
+        painter.drawPath(path_back)
+
+        # Draw Front Player (prominent and fully opaque)
+        painter.setOpacity(1.0)
+        painter.drawEllipse(9, 2, 7, 7) # head
+        path_front = QPainterPath()
+        path_front.moveTo(5, 17)
+        path_front.arcTo(5, 10, 15, 12, 0, 180)
+        path_front.lineTo(5, 17)
+        painter.drawPath(path_front)
+
+
 class PlayerStatusWidget(QWidget):
     """Header widget: player icon + count badge. Hover reveals a dropdown with each player's state."""
-
-    _STATE = {
-        "connecting": ("⏳", "#D99B26", "Connecting..."),
-        "connected":  ("🟢", "#48C0A4", "In Game"),
-    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,10 +61,10 @@ class PlayerStatusWidget(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 8, 0)
-        layout.setSpacing(5)
+        layout.setSpacing(6)
 
-        self.icon_lbl = QLabel("👥")
-        self.icon_lbl.setStyleSheet("border: none; font-size: 16px;")
+        # Use beautiful premium vector icon
+        self.icon_lbl = PlayerIconWidget()
 
         self.badge = QLabel("0")
         self.badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -118,8 +145,7 @@ class PlayerStatusWidget(QWidget):
         vbox.addWidget(sep)
 
         for pid, info in self._players.items():
-            icon_ch, color, state_text = self._STATE.get(
-                info.get("state", "connecting"), ("⏳", "#D99B26", "Connecting..."))
+            state = info.get("state", "connecting")
 
             row = QWidget()
             row.setStyleSheet("background:transparent;")
@@ -127,8 +153,18 @@ class PlayerStatusWidget(QWidget):
             rl.setContentsMargins(0, 2, 0, 2)
             rl.setSpacing(8)
 
-            ico = QLabel(icon_ch)
-            ico.setStyleSheet("font-size:14px;")
+            # Small premium indicator dot
+            ico = QLabel()
+            ico.setFixedSize(6, 6) # Small connected green/connecting gold circle
+
+            if state == "connected":
+                ico.setStyleSheet("background-color: #48C0A4; border-radius: 3px; border: none;")
+                state_text = "In Game"
+                state_color = "#48C0A4"
+            else:
+                ico.setStyleSheet("background-color: #D99B26; border-radius: 3px; border: none;")
+                state_text = f"ID: {pid[:8]}"
+                state_color = "#D99B26"
 
             nm = QLabel(info["name"])
             nm.setFont(QFont("PT Sans", 10, QFont.Weight.Bold))
@@ -136,7 +172,7 @@ class PlayerStatusWidget(QWidget):
 
             st = QLabel(state_text)
             st.setFont(QFont("PT Sans", 9))
-            st.setStyleSheet(f"color:{color};")
+            st.setStyleSheet(f"color:{state_color};")
 
             rl.addWidget(ico)
             rl.addWidget(nm)
