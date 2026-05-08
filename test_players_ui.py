@@ -46,21 +46,21 @@ class TestWindow(QMainWindow):
         btn_font = QFont("PT Sans", 10, QFont.Weight.Bold)
 
         # Action 1: Add a Connecting Player
-        self.btn_add_connecting = QPushButton("⏳ Step 1: Add 'Goth Ju' (Connecting)")
+        self.btn_add_connecting = QPushButton("⏳ Step 1: Add 'Goth Ju' (Connecting, shows ID)")
         self.btn_add_connecting.setFont(btn_font)
         self.btn_add_connecting.setStyleSheet("background-color: #D99B26; color: #0F1E24; border-radius: 6px; padding: 8px; border: none;")
         self.btn_add_connecting.clicked.connect(self.mock_connecting)
         cl.addWidget(self.btn_add_connecting)
 
         # Action 2: Change Player to Connected (In Game)
-        self.btn_connect = QPushButton("🟢 Step 2: Make 'Goth Ju' Connected (In Game)")
+        self.btn_connect = QPushButton("🟢 Step 2: Make 'Goth Ju' Connected (In Game, keeps ID)")
         self.btn_connect.setFont(btn_font)
         self.btn_connect.setStyleSheet("background-color: #48C0A4; color: #0F1E24; border-radius: 6px; padding: 8px; border: none;")
         self.btn_connect.clicked.connect(self.mock_connected)
         cl.addWidget(self.btn_connect)
 
         # Action 3: Add a Second Player
-        self.btn_add_second = QPushButton("👥 Step 3: Add 'Rounak' (Connecting)")
+        self.btn_add_second = QPushButton("👥 Step 3: Add 'Rounak' (Connecting, shows ID)")
         self.btn_add_second.setFont(btn_font)
         self.btn_add_second.setStyleSheet("background-color: #3A86C8; color: #FFFFFF; border-radius: 6px; padding: 8px; border: none;")
         self.btn_add_second.clicked.connect(self.mock_add_second)
@@ -88,13 +88,13 @@ class TestWindow(QMainWindow):
             "state": "connecting"
         }
         self.player_status.update_players(self.mock_players)
-        self.info_lbl.setText("Goth Ju added as CONNECTING with ID: F6335E06.")
+        self.info_lbl.setText("Goth Ju added as ⏳ (Connecting) with ID: F6335E06.")
 
     def mock_connected(self):
         if "F6335E064050D5A2481B77B09CA138F9" in self.mock_players:
             self.mock_players["F6335E064050D5A2481B77B09CA138F9"]["state"] = "connected"
             self.player_status.update_players(self.mock_players)
-            self.info_lbl.setText("Goth Ju state changed to CONNECTED (In Game).")
+            self.info_lbl.setText("Goth Ju status changed to 🟢 (In Game), still displaying ID: F6335E06.")
 
     def mock_add_second(self):
         self.mock_players["D8291A77E201B412A84D77E1208C349E"] = {
@@ -102,7 +102,7 @@ class TestWindow(QMainWindow):
             "state": "connecting"
         }
         self.player_status.update_players(self.mock_players)
-        self.info_lbl.setText("Second player Rounak added as CONNECTING.")
+        self.info_lbl.setText("Second player Rounak added as ⏳ (Connecting) with ID: D8291A77.")
 
     def mock_clear(self):
         self.mock_players.clear()
