@@ -153,16 +153,17 @@ class PlayerStatusWidget(QWidget):
             rl.setContentsMargins(0, 2, 0, 2)
             rl.setSpacing(8)
 
-            # Small premium indicator dot
+            # Indicators (⏳ and 🟢) as requested
             ico = QLabel()
-            ico.setFixedSize(6, 6) # Small connected green/connecting gold circle
-
+            
             if state == "connected":
-                ico.setStyleSheet("background-color: #48C0A4; border-radius: 3px; border: none;")
-                state_text = "In Game"
+                ico.setText("🟢")
+                ico.setStyleSheet("font-size: 10px; border: none; background: transparent;") # small green circle
+                state_text = f"ID: {pid[:8]}"
                 state_color = "#48C0A4"
             else:
-                ico.setStyleSheet("background-color: #D99B26; border-radius: 3px; border: none;")
+                ico.setText("⏳")
+                ico.setStyleSheet("font-size: 11px; border: none; background: transparent;")
                 state_text = f"ID: {pid[:8]}"
                 state_color = "#D99B26"
 
