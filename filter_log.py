@@ -105,7 +105,7 @@ SUPPRESS_PATTERNS = [
     re.compile(r"R5LogNetCm: Verbose", re.I), # verbose CM stream chatter
     re.compile(r"R5LogNetBL:.*PushTransaction.*Skip client document", re.I),
     re.compile(r"R5LogBLService:.*RegisterService", re.I),
-    re.compile(r"R5LogDataKeeper: Verbose:.*(?!OnAccountUeLogin|OnPlayerIsReady|Player is ready|ReserveCoop|SetAccountId|OnCoopAccountBLConnected)", re.I),  # suppress most verbose but key ones pass through above
+    re.compile(r"R5LogDataKeeper: Verbose:(?!.*(?:OnAccountUeLogin|OnPlayerIsReady|Player is ready|ReserveCoop|SetAccountId|OnCoopAccountBLConnected))", re.I),  # suppress most verbose but key ones pass through above
     re.compile(r"R5LogBLDalAQ", re.I),
     re.compile(r"R5LogBLVersionator", re.I),
     re.compile(r"LogUObjectHash", re.I),
