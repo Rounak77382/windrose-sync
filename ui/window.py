@@ -74,10 +74,10 @@ class PlayerStatusWidget(QWidget):
 
         self.badge = QLabel("0")
         self.badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.badge.setFixedSize(22, 22)
-        self.badge.setFont(QFont("PT Sans", 9, QFont.Weight.Bold))
+        self.badge.setFixedSize(16, 16)
+        self.badge.setFont(QFont("PT Sans", 8, QFont.Weight.Bold))
         self.badge.setStyleSheet(
-            "color:#0F1E24; background:#48C0A4; border-radius:11px; border:none;"
+            "color:#0F1E24; background:#48C0A4; border-radius:8px; border:none;"
         )
 
         layout.addWidget(self.icon_lbl)
