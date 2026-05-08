@@ -2,6 +2,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
 from ui.window import PlayerStatusWidget
 
 class TestWindow(QMainWindow):
