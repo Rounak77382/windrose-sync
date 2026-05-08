@@ -21,28 +21,34 @@ class PlayerIconWidget(QWidget):
 
     def paintEvent(self, event):
         from PyQt6.QtGui import QPainter, QBrush, QColor, QPainterPath
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter = QPainter()
+        if not painter.begin(self):
+            return
+        
+        try:
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        color = QColor("#48C0A4") # Premium windrose-sync teal
+            color = QColor("#48C0A4") # Premium windrose-sync teal
 
-        # Draw Back Player (slightly offset and translucent)
-        painter.setOpacity(0.55)
-        painter.drawEllipse(3, 4, 6, 6) # head
-        path_back = QPainterPath()
-        path_back.moveTo(0, 17)
-        path_back.arcTo(0, 11, 12, 10, 0, 180)
-        path_back.lineTo(0, 17)
-        painter.drawPath(path_back)
+            # Draw Back Player (slightly offset and translucent)
+            painter.setOpacity(0.55)
+            painter.drawEllipse(3, 4, 6, 6) # head
+            path_back = QPainterPath()
+            path_back.moveTo(0, 17)
+            path_back.arcTo(0, 11, 12, 10, 0, 180)
+            path_back.lineTo(0, 17)
+            painter.drawPath(path_back)
 
-        # Draw Front Player (prominent and fully opaque)
-        painter.setOpacity(1.0)
-        painter.drawEllipse(9, 2, 7, 7) # head
-        path_front = QPainterPath()
-        path_front.moveTo(5, 17)
-        path_front.arcTo(5, 10, 15, 12, 0, 180)
-        path_front.lineTo(5, 17)
-        painter.drawPath(path_front)
+            # Draw Front Player (prominent and fully opaque)
+            painter.setOpacity(1.0)
+            painter.drawEllipse(9, 2, 7, 7) # head
+            path_front = QPainterPath()
+            path_front.moveTo(5, 17)
+            path_front.arcTo(5, 10, 15, 12, 0, 180)
+            path_front.lineTo(5, 17)
+            painter.drawPath(path_front)
+        finally:
+            painter.end()
 
 
 class PlayerStatusWidget(QWidget):
@@ -158,7 +164,7 @@ class PlayerStatusWidget(QWidget):
             
             if state == "connected":
                 ico.setText("🟢")
-                ico.setStyleSheet("font-size: 7px; border: none; background: transparent;") # small green circle
+                ico.setStyleSheet("font-size: 10px; border: none; background: transparent;") # small green circle
                 state_text = f"ID: {pid[:8]}"
                 state_color = "#48C0A4"
             else:

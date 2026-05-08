@@ -18,4 +18,8 @@ __pycache__/
 *.tmp
 .DS_Store
 
+# Test utilities & text dumps
+test_*.py
 server_log.txt
+UI_logs.txt
+player_lines.txt
