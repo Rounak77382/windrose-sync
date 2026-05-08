@@ -77,7 +77,7 @@ class PlayerStatusWidget(QWidget):
         self.badge.setFixedSize(16, 16)
         self.badge.setFont(QFont("PT Sans", 8, QFont.Weight.Bold))
         self.badge.setStyleSheet(
-            "color:#0F1E24; background:#48C0A4; border-radius:8px; border:none;"
+            "color:#0F1E24; background:#48C0A4; border-radius:8px; border:none; padding-bottom:2px;"
         )
 
         layout.addWidget(self.icon_lbl)
