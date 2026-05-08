@@ -54,7 +54,9 @@ IMPORTANT_PATTERNS = [
     ("PLAYER",   re.compile(r"OnClientIsReady|Client id ReadyToPlay", re.I)),
     # Player session summary lines
     ("PLAYER",   re.compile(r"ServerAccount\..*AccountName '.*?'\. AccountId", re.I)),
-    # Player session summary lines ("Name 'X'. AccountId 'Y'. State 'Z'")
+    # Naked section headers printed by the server (no UE timestamp)
+    ("PLAYER",   re.compile(r"^(Connected Accounts|Reserved Accounts|Disconnected Accounts)$", re.I)),
+    # Player state summary lines ("Name 'X'. AccountId 'Y'. State 'Z'")
     ("PLAYER",   re.compile(r"Name '.*?'\. AccountId '.*?'\. State '", re.I)),
     # Player disconnect / farewell
     ("PLAYER",   re.compile(r"OnAccountFarewell|Account farewell received", re.I)),
@@ -105,7 +107,7 @@ SUPPRESS_PATTERNS = [
     re.compile(r"R5LogNetCm: Verbose", re.I), # verbose CM stream chatter
     re.compile(r"R5LogNetBL:.*PushTransaction.*Skip client document", re.I),
     re.compile(r"R5LogBLService:.*RegisterService", re.I),
-    re.compile(r"R5LogDataKeeper: Verbose:(?!.*(?:OnAccountUeLogin|OnPlayerIsReady|Player is ready|ReserveCoop|SetAccountId|OnCoopAccountBLConnected))", re.I),  # suppress most verbose but key ones pass through above
+    re.compile(r"R5LogDataKeeper: Verbose:.*(?!OnAccountUeLogin|OnPlayerIsReady|Player is ready|ReserveCoop|SetAccountId|OnCoopAccountBLConnected)", re.I),  # suppress most verbose but key ones pass through above
     re.compile(r"R5LogBLDalAQ", re.I),
     re.compile(r"R5LogBLVersionator", re.I),
     re.compile(r"LogUObjectHash", re.I),
