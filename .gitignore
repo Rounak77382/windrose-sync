@@ -19,7 +19,5 @@ __pycache__/
 .DS_Store
 
 # Test utilities & text dumps
-test_*.py
-server_log.txt
-UI_logs.txt
+test_tools/
 player_lines.txt
