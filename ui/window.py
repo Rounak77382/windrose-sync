@@ -17,7 +17,7 @@ class PlayerIconWidget(QWidget):
     """A premium, high-fidelity drawn vector icon representing players online."""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(22, 22)
+        self.setFixedSize(26, 26)
 
     def paintEvent(self, event):
         from PyQt6.QtGui import QPainter, QBrush, QColor, QPainterPath
@@ -27,6 +27,10 @@ class PlayerIconWidget(QWidget):
         
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            
+            # Proportional responsive vector scaling
+            scale_factor = self.width() / 22.0
+            painter.scale(scale_factor, scale_factor)
 
             color = QColor("#48C0A4") # Premium windrose-sync teal
 
@@ -59,29 +63,26 @@ class PlayerStatusWidget(QWidget):
         self._players = {}   # {id: {"name": str, "state": str}}
         self._popup  = None
 
-        # Hide timer — delays hiding so mouse can move into popup
+        self.setFixedSize(34, 30)
+
+        # Hover checking timer (checks if cursor has left both widget and popup)
         self._timer = QTimer(self)
-        self._timer.setSingleShot(True)
-        self._timer.setInterval(120)
-        self._timer.timeout.connect(self._hide_popup)
+        self._timer.setInterval(100)
+        self._timer.timeout.connect(self._check_hover)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 8, 0)
-        layout.setSpacing(6)
+        # Use beautiful premium vector icon parented directly to self
+        self.icon_lbl = PlayerIconWidget(self)
+        self.icon_lbl.move(0, 4)
 
-        # Use beautiful premium vector icon
-        self.icon_lbl = PlayerIconWidget()
-
-        self.badge = QLabel("0")
+        self.badge = QLabel("0", self)
         self.badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.badge.setFixedSize(16, 16)
         self.badge.setFont(QFont("PT Sans", 8, QFont.Weight.Bold))
         self.badge.setStyleSheet(
-            "color:#0F1E24; background:#48C0A4; border-radius:8px; border:none; padding-bottom:2px;"
+            "color:#0F1E24; background:#48C0A4; border-radius:8px; border:none; padding-bottom:1px;"
         )
+        self.badge.move(18, 0)
 
-        layout.addWidget(self.icon_lbl)
-        layout.addWidget(self.badge)
         self.setVisible(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -95,34 +96,54 @@ class PlayerStatusWidget(QWidget):
 
     # ── hover logic ─────────────────────────────────────────────────────────
     def enterEvent(self, event):
-        self._timer.stop()
         self._show_popup()
+        self._timer.start()
         super().enterEvent(event)
 
-    def leaveEvent(self, event):
-        self._timer.start()
-        super().leaveEvent(event)
+    def _check_hover(self):
+        """Deterministically verify if mouse is still hovering either the badge or the dropdown."""
+        from PyQt6.QtGui import QCursor
+        
+        # Check main badge widget
+        gp_widget = self.mapToGlobal(QPoint(0, 0))
+        widget_rect = self.rect().translated(gp_widget)
+        
+        over_widget = widget_rect.contains(QCursor.pos())
 
-    def eventFilter(self, obj, event):
-        """Keep popup open while mouse is inside it."""
-        if event.type() == QEvent.Type.Enter:
+        # Check dropdown popup widget (add a small 8px padding buffer so moving mouse between them is smooth)
+        over_popup = False
+        if self._popup and self._popup.isVisible():
+            gp_popup = self._popup.mapToGlobal(QPoint(0, 0))
+            popup_rect = self._popup.rect().translated(gp_popup)
+            # Add small top buffer so moving through the tiny 4px gap doesn't cause a flicker
+            popup_rect.adjust(0, -8, 0, 0)
+            over_popup = popup_rect.contains(QCursor.pos())
+
+        if not over_widget and not over_popup:
+            self._hide_popup()
             self._timer.stop()
-        elif event.type() == QEvent.Type.Leave:
-            self._timer.start()
-        return False
 
     # ── popup build ─────────────────────────────────────────────────────────
     def _show_popup(self):
         self._hide_popup()
 
-        popup = QFrame(None)
+        from PyQt6.QtWidgets import QWidget
+        popup = QWidget(None)
         popup.setWindowFlags(
             Qt.WindowType.Tool |
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint
         )
         popup.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
-        popup.setStyleSheet("""
+        popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        # Outer layout for popup
+        outer_layout = QVBoxLayout(popup)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Styled container frame for background & rounded corners
+        container = QFrame()
+        container.setStyleSheet("""
             QFrame {
                 background-color: #0F1E24;
                 border: 1px solid #48C0A4;
@@ -130,8 +151,9 @@ class PlayerStatusWidget(QWidget):
             }
             QLabel { border: none; background: transparent; }
         """)
+        outer_layout.addWidget(container)
 
-        vbox = QVBoxLayout(popup)
+        vbox = QVBoxLayout(container)
         vbox.setContentsMargins(14, 10, 16, 12)
         vbox.setSpacing(8)
 
@@ -196,11 +218,6 @@ class PlayerStatusWidget(QWidget):
         gp = self.mapToGlobal(QPoint(0, self.height() + 4))
         popup.move(gp)
         popup.show()
-
-        # Install event filter on popup + children to cancel hide timer
-        popup.installEventFilter(self)
-        for child in popup.findChildren(QWidget):
-            child.installEventFilter(self)
 
         self._popup = popup
 
@@ -292,6 +309,7 @@ class MainWindow(QMainWindow):
         
         self.player_status = PlayerStatusWidget()
         header_layout.addWidget(self.player_status)
+        header_layout.addSpacing(10)
         
         self.status_lbl = QLabel("● Checking status...")
         status_font = QFont("PT Sans", 12, QFont.Weight.Bold)
