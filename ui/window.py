@@ -82,7 +82,7 @@ class PlayerStatusWidget(QWidget):
 
         layout.addWidget(self.icon_lbl)
         layout.addWidget(self.badge)
-        self.setVisible(False)
+        self.setVisible(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     # ── public API ──────────────────────────────────────────────────────────
@@ -90,7 +90,6 @@ class PlayerStatusWidget(QWidget):
         self._players = dict(players)
         n = len(players)
         self.badge.setText(str(n))
-        self.setVisible(n > 0)
         if self._popup and self._popup.isVisible():
             self._show_popup()   # rebuild in-place
 
@@ -114,8 +113,6 @@ class PlayerStatusWidget(QWidget):
 
     # ── popup build ─────────────────────────────────────────────────────────
     def _show_popup(self):
-        if not self._players:
-            return
         self._hide_popup()
 
         popup = QFrame(None)
@@ -150,8 +147,14 @@ class PlayerStatusWidget(QWidget):
         sep.setStyleSheet("background:#2A4A56; max-height:1px; border:none;")
         vbox.addWidget(sep)
 
-        for pid, info in self._players.items():
-            state = info.get("state", "connecting")
+        if not self._players:
+            no_players = QLabel("No players online")
+            no_players.setFont(QFont("PT Sans", 9, QFont.Weight.Medium))
+            no_players.setStyleSheet("color: #839496; padding: 4px 0;")
+            vbox.addWidget(no_players)
+        else:
+            for pid, info in self._players.items():
+                state = info.get("state", "connecting")
 
             row = QWidget()
             row.setStyleSheet("background:transparent;")
