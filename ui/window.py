@@ -158,7 +158,7 @@ class PlayerStatusWidget(QWidget):
             
             if state == "connected":
                 ico.setText("🟢")
-                ico.setStyleSheet("font-size: 10px; border: none; background: transparent;") # small green circle
+                ico.setStyleSheet("font-size: 7px; border: none; background: transparent;") # small green circle
                 state_text = f"ID: {pid[:8]}"
                 state_color = "#48C0A4"
             else:
