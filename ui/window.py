@@ -156,39 +156,39 @@ class PlayerStatusWidget(QWidget):
             for pid, info in self._players.items():
                 state = info.get("state", "connecting")
 
-            row = QWidget()
-            row.setStyleSheet("background:transparent;")
-            rl = QHBoxLayout(row)
-            rl.setContentsMargins(0, 2, 0, 2)
-            rl.setSpacing(8)
+                row = QWidget()
+                row.setStyleSheet("background:transparent;")
+                rl = QHBoxLayout(row)
+                rl.setContentsMargins(0, 2, 0, 2)
+                rl.setSpacing(8)
 
-            # Indicators (⏳ and 🟢) as requested
-            ico = QLabel()
-            
-            if state == "connected":
-                ico.setText("🟢")
-                ico.setStyleSheet("font-size: 10px; border: none; background: transparent;") # small green circle
-                state_text = f"ID: {pid[:8]}"
-                state_color = "#48C0A4"
-            else:
-                ico.setText("⏳")
-                ico.setStyleSheet("font-size: 11px; border: none; background: transparent;")
-                state_text = f"ID: {pid[:8]}"
-                state_color = "#D99B26"
+                # Indicators (⏳ and 🟢) as requested
+                ico = QLabel()
+                
+                if state == "connected":
+                    ico.setText("🟢")
+                    ico.setStyleSheet("font-size: 10px; border: none; background: transparent;") # small green circle
+                    state_text = f"ID: {pid[:8]}"
+                    state_color = "#48C0A4"
+                else:
+                    ico.setText("⏳")
+                    ico.setStyleSheet("font-size: 11px; border: none; background: transparent;")
+                    state_text = f"ID: {pid[:8]}"
+                    state_color = "#D99B26"
 
-            nm = QLabel(info["name"])
-            nm.setFont(QFont("PT Sans", 10, QFont.Weight.Bold))
-            nm.setStyleSheet("color:#F4F0EA;")
+                nm = QLabel(info["name"])
+                nm.setFont(QFont("PT Sans", 10, QFont.Weight.Bold))
+                nm.setStyleSheet("color:#F4F0EA;")
 
-            st = QLabel(state_text)
-            st.setFont(QFont("PT Sans", 9))
-            st.setStyleSheet(f"color:{state_color};")
+                st = QLabel(state_text)
+                st.setFont(QFont("PT Sans", 9))
+                st.setStyleSheet(f"color:{state_color};")
 
-            rl.addWidget(ico)
-            rl.addWidget(nm)
-            rl.addStretch()
-            rl.addWidget(st)
-            vbox.addWidget(row)
+                rl.addWidget(ico)
+                rl.addWidget(nm)
+                rl.addStretch()
+                rl.addWidget(st)
+                vbox.addWidget(row)
 
         popup.adjustSize()
 
