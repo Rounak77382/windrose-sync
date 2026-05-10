@@ -58,6 +58,8 @@ def upload_snapshot(cfg):
         f.write(timestamp)
     subprocess.run(["rclone", "copyto", str(latest_file), f"{cfg['RemoteSnapshotsDir']}/latest.txt"], check=True, creationflags=_NO_WINDOW)
 
+    # Record the time of this sync so drift detection can use it as the baseline
+    write_last_synced_sentinel(cfg)
     return timestamp
 
 def restore_snapshot(cfg):
@@ -121,4 +123,59 @@ def restore_snapshot(cfg):
         server_desc.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(downloaded_desc, server_desc)
 
+    # Record the time of this sync so drift detection can use it as the baseline
+    write_last_synced_sentinel(cfg)
     return snapshot_name
+
+def get_local_world_timestamp(cfg) -> datetime.datetime:
+    """Scans the worlds directory and returns the latest file modification time found."""
+    worlds_dir = cfg["WorldsDir"]
+    if not worlds_dir.exists():
+        return datetime.datetime.fromtimestamp(0)
+        
+    max_mtime = 0
+    for path in worlds_dir.rglob("*"):
+        if path.is_file():
+            try:
+                mtime = path.stat().st_mtime
+                if mtime > max_mtime:
+                    max_mtime = mtime
+            except Exception:
+                continue
+    
+    return datetime.datetime.fromtimestamp(max_mtime)
+
+def write_last_synced_sentinel(cfg):
+    """
+    Writes the current wall-clock time to a local sentinel file after every
+    successful upload OR restore operation.
+    This gives drift detection a correct baseline: 'when did we last sync?'
+    """
+    sentinel = cfg["WorkRoot"] / "last_synced_at.txt"
+    sentinel.parent.mkdir(parents=True, exist_ok=True)
+    with open(sentinel, "w") as f:
+        f.write(datetime.datetime.now().isoformat())
+
+
+def get_last_synced_at(cfg) -> datetime.datetime:
+    """
+    Returns the wall-clock time of the last successful sync event (upload or restore).
+    
+    WHY this is correct vs comparing to cloud snapshot date:
+    - Cloud snapshot timestamps are the time the SNAPSHOT WAS CREATED (e.g. 10pm)
+    - After a fetch at 1am, local files are written at 1am
+    - So local_mtime (1am) > cloud_snapshot_date (10pm) → false alarm every time
+    
+    The sentinel is written at the moment of sync completion, so:
+    - local_mtime > sentinel_time  →  user genuinely played after last sync
+    - local_mtime <= sentinel_time →  files are a result of the sync itself, safe
+    """
+    sentinel = cfg["WorkRoot"] / "last_synced_at.txt"
+    if sentinel.exists():
+        try:
+            with open(sentinel, "r") as f:
+                return datetime.datetime.fromisoformat(f.read().strip())
+        except Exception:
+            pass
+    # No sentinel = never synced via this app
+    return datetime.datetime.fromtimestamp(0)

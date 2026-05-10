@@ -1,24 +1,20 @@
-## 🎉 Version 1.1.0 – Real-Time Player Tracking & UI Polish
+## 🎉 Version 1.2.0 – Health Dashboards, Sync Safety & UI Polish
 
-Welcome to Version 1.1.0 of Windrose Sync! This update introduces powerful real-time player session tracking directly within the glassmorphic control panel, along with several key performance enhancements and crucial bug fixes for reliable, long-running operation.
+Welcome to Version 1.2.0 of Windrose Sync! This essential update supercharges host safety with proactive exit auditing and dynamic real-time telemetry, placing an intuitive System Health Dashboard directly at the top of the glassmorphic console.
 
 ### ✨ New Features
 
-- 🎮 **Real-Time Player Session Tracking** — Monitor who is actively playing or connecting to your dedicated server directly from the control panel header, powered by intelligent Unreal Engine log parsing.
-- 👥 **Dynamic PlayerStatusWidget** — Replaced the static players label with an advanced status widget featuring a custom-drawn vector player icon, real-time player count badge, and a hover-activated dropdown list.
-- ⏳ **Connecting & Connected States** — Players are tracked throughout their join/leave lifecycle, showing distinct state indicators (⏳ for connecting, 🟢 for connected) and player IDs.
-- 👁️ **Always-Visible UI Indicator** — The player status widget remains visible in the header, defaulting to a `0` count and presenting a clean "No players online" message in the dropdown when the server is empty.
-- 🎨 **Enhanced UI Rendering** — Embedded smooth background rendering support for the main window layout to ensure zero visual flickering and fluid alpha compositions.
+- 📊 **Real-Time Health Dashboards** — High-fidelity vector status indicators injected into the header providing live feedback on Cloud Mutex Lock, Local Daemon Process, and Backup Integrity.
+- 🛡️ **Proactive Shutdown Auditing** — Fully custom Close logic that scans for orphaned lock files, active server processes, or unpushed local saves before allowing application termination.
+- 🧬 **Sentinel-Based Drift Detection** — Mathematically accurate synchronization tracking using a persistent local timestamp receipt, eliminating false-positive drift errors.
+- ⚡ **Manual Control Center** — Direct-action overrides added for "Force Upload Save" and "Force Fetch Latest" for instantaneous, surgical control over game backups.
+- 🗨️ **Styled Context Tooltips** — Comprehensive interactive help provided via glass-themed floating tooltips across all console controls.
 
-### 🛠️ Bug Fixes & Chores
+### 🎨 Aesthetic & Layout Polish
 
-- 📋 **Direct UE Log File Tailing** — Switched log tracking from stdout to direct log file tailing, solving terminal reading limitations and improving tracking accuracy.
-- 🔄 **Stale EOF Tailing Fix** — Added dynamic file modification monitoring (`mtime`) to restart the tailer from position 0 for fresh sessions.
-- 📁 **Correct Log Filename** — Fixed the Unreal Engine log filename mapping to target `R5.log` (previously looking for non-existent `WindroseServer.log`).
-- 🔍 **Filter Logic Repair** — Fixed negative lookahead regular expressions in `R5LogDataKeeper Verbose` filtering to allow player tracking log lines to pass.
-- 👥 **Dropdown Row Indentation** — Corrected list generation indentation to support rendering multiple concurrent players in the hover dropdown.
-- ⚠️ **Painter Warning Cleanup** — Secured `QPainter` calls within `PlayerIconWidget` to eliminate console warning floods.
-- 🧹 **Test Tools Relocation** — Grouped all test utilities, logs, and temporary dumps in a dedicated `test_tools/` folder to keep the root directory pristine.
+- 📐 **Optimized Topology** — Rearranged header geometry: System indicators now cluster firmly left alongside branding while player tracking floats strictly right.
+- 🪶 **Refined Typography & Packing** — Calibrated spacing across status tiles, downscaled dense lettering for crisp readability, and introduced vertical floating visual separators.
+- 🎯 **Deterministic Layout Anchoring** — Locked specific size constraints on text and icon containers to guarantee tight, pixel-perfect vertical stacking without internal whitespace leakage.
 
 ### 📥 Installation
 

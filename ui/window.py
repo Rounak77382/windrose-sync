@@ -5,7 +5,7 @@ import sys
 from PIL import Image, ImageFilter
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QTextEdit, QFrame, QApplication
+    QLabel, QPushButton, QTextEdit, QFrame, QApplication, QSizePolicy
 )
 from PyQt6.QtGui import QPixmap, QImage, QFont, QIcon
 from PyQt6.QtCore import Qt, QTimer, QPoint, QEvent
@@ -53,6 +53,138 @@ class PlayerIconWidget(QWidget):
             painter.drawPath(path_front)
         finally:
             painter.end()
+
+class LockStatusIcon(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(22, 22)
+        self.color = "#48C0A4"
+
+    def set_status_color(self, color):
+        if self.color != color:
+            self.color = color
+            self.update()
+
+    def paintEvent(self, event):
+        from PyQt6.QtGui import QPainter, QColor, QPen
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        color = QColor(self.color)
+        painter.setPen(QPen(color, 2))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        # Draw shackle (arch)
+        painter.drawArc(5, 3, 12, 12, 0, 180*16)
+        
+        # Draw lock body
+        painter.setBrush(color)
+        painter.drawRoundedRect(4, 10, 14, 10, 2, 2)
+        
+        # Keyhole dot
+        painter.setBrush(QColor("#0F1E24"))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(10, 13, 2, 3)
+        painter.end()
+
+class ServerStatusIcon(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(22, 22)
+        self.color = "#48C0A4"
+
+    def set_status_color(self, color):
+        if self.color != color:
+            self.color = color
+            self.update()
+
+    def paintEvent(self, event):
+        from PyQt6.QtGui import QPainter, QColor
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        color = QColor(self.color)
+        painter.setBrush(color)
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        # Draw server blades stacked
+        painter.drawRoundedRect(3, 4, 16, 4, 1, 1)
+        painter.drawRoundedRect(3, 10, 16, 4, 1, 1)
+        painter.drawRoundedRect(3, 16, 16, 4, 1, 1)
+        
+        # Tiny status leds
+        painter.setBrush(QColor("#0F1E24"))
+        painter.drawEllipse(5, 5, 2, 2)
+        painter.drawEllipse(5, 11, 2, 2)
+        painter.drawEllipse(5, 17, 2, 2)
+        painter.end()
+
+class CloudStatusIcon(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(22, 22)
+        self.color = "#48C0A4"
+
+    def set_status_color(self, color):
+        if self.color != color:
+            self.color = color
+            self.update()
+
+    def paintEvent(self, event):
+        from PyQt6.QtGui import QPainter, QColor, QPainterPath
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        color = QColor(self.color)
+        painter.setBrush(color)
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        # Vector Cloud
+        path = QPainterPath()
+        path.addEllipse(4, 10, 8, 8)
+        path.addEllipse(10, 10, 8, 8)
+        path.addEllipse(7, 5, 9, 9)
+        path.addRoundedRect(7, 12, 8, 6, 1, 1)
+        
+        painter.drawPath(path)
+        painter.end()
+
+class DashboardStatusTile(QWidget):
+    """A composite status badge used in the global header containing a vector icon and dynamic labels."""
+    def __init__(self, title_text, icon_widget, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.setContentsMargins(10, 5, 10, 5)
+        layout.setSpacing(8)
+        
+        self.icon = icon_widget
+        layout.addWidget(self.icon, 0, Qt.AlignmentFlag.AlignVCenter)
+        
+        text_container = QVBoxLayout()
+        text_container.setSpacing(0)
+        text_container.setContentsMargins(0,0,0,0)
+        
+        self.title_lbl = QLabel(title_text.upper())
+        self.title_lbl.setFont(QFont("PT Sans", 8, QFont.Weight.Bold))
+        self.title_lbl.setStyleSheet(f"color: {theme_colors['text_muted']}; border: none; background: transparent;")
+        self.title_lbl.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        
+        self.value_lbl = QLabel("INITIALIZING...")
+        self.value_lbl.setFont(QFont("PT Sans", 9, QFont.Weight.Bold))
+        self.value_lbl.setStyleSheet(f"color: {theme_colors['text_main']}; border: none; background: transparent;")
+        self.value_lbl.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        
+        text_container.addWidget(self.title_lbl)
+        text_container.addWidget(self.value_lbl)
+        
+        layout.addLayout(text_container)
+        layout.addStretch()
+
+    def update_status(self, text, hex_color):
+        self.value_lbl.setText(text.upper())
+        self.value_lbl.setStyleSheet(f"color: {hex_color}; border: none; background: transparent;")
+        self.icon.set_status_color(hex_color)
 
 
 class PlayerStatusWidget(QWidget):
@@ -269,6 +401,19 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
         
+        # Premium Glassmorphic Tooltip Styling
+        self.setStyleSheet(f"""
+            QToolTip {{
+                background-color: #17303A;
+                color: {theme_colors['text_main']};
+                border: 1px solid {theme_colors['accent_gold']};
+                border-radius: 4px;
+                padding: 6px;
+                font-family: 'PT Sans';
+                font-size: 12px;
+            }}
+        """)
+        
         # Main vertical layout
         self.main_layout = QVBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(20, 20, 20, 20)
@@ -305,17 +450,32 @@ class MainWindow(QMainWindow):
         self.title_lbl.setStyleSheet(f"color: {theme_colors['accent_gold']}; border: none;")
         header_layout.addWidget(self.title_lbl)
         
+        header_layout.addSpacing(20)
+        
+        # Stylized Floating Vertical Separator
+        line = QFrame()
+        line.setFixedWidth(1)
+        line.setMaximumHeight(32)
+        line.setStyleSheet("background-color: #2A4A56; border: none;")
+        header_layout.addWidget(line)
+        
+        header_layout.addSpacing(10)
+
+        # Advanced System Metrics Header Section - Clustered Left
+        self.tile_lock = DashboardStatusTile("Cloud Remote", LockStatusIcon())
+        header_layout.addWidget(self.tile_lock)
+        
+        self.tile_server = DashboardStatusTile("Local Server", ServerStatusIcon())
+        header_layout.addWidget(self.tile_server)
+        
+        self.tile_data = DashboardStatusTile("Backup Integrity", CloudStatusIcon())
+        header_layout.addWidget(self.tile_data)
+        
+        # Push everything that follows to the absolute right extremity
         header_layout.addStretch()
         
         self.player_status = PlayerStatusWidget()
         header_layout.addWidget(self.player_status)
-        header_layout.addSpacing(10)
-        
-        self.status_lbl = QLabel("● Checking status...")
-        status_font = QFont("PT Sans", 12, QFont.Weight.Bold)
-        self.status_lbl.setFont(status_font)
-        self.status_lbl.setStyleSheet(f"color: {theme_colors['text_muted']}; border: none;")
-        header_layout.addWidget(self.status_lbl)
         
         self.main_layout.addWidget(self.header_frame)
         
@@ -344,30 +504,49 @@ class MainWindow(QMainWindow):
         self.btn_start.setObjectName("btnStart")
         self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_start.setStyleSheet(sheets["btn_start"])
+        self.btn_start.setToolTip("Safely downloads the latest cloud snapshot and starts the dedicated game server.")
         controls_layout.addWidget(self.btn_start)
         
-        self.btn_stop = QPushButton("Stop Safely")
+        self.btn_stop = QPushButton("Stop & Sync Safely")
         self.btn_stop.setObjectName("btnStop")
         self.btn_stop.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_stop.setStyleSheet(sheets["btn_stop"])
+        self.btn_stop.setToolTip("Exits the server process and triggers an immediate, automatic cloud backup.")
         controls_layout.addWidget(self.btn_stop)
         
         controls_layout.addSpacing(15)
         
         # --- Utility Buttons ---
+        self.btn_manual_sync = QPushButton("Force Upload Save")
+        self.btn_manual_sync.setObjectName("btnManualSync")
+        self.btn_manual_sync.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_manual_sync.setStyleSheet(sheets["btn_utility"])
+        self.btn_manual_sync.setToolTip("Manually initiates an upload of your local save files to the cloud.")
+        controls_layout.addWidget(self.btn_manual_sync)
+
+        self.btn_manual_fetch = QPushButton("Force Fetch Latest")
+        self.btn_manual_fetch.setObjectName("btnManualFetch")
+        self.btn_manual_fetch.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_manual_fetch.setStyleSheet(sheets["btn_utility"])
+        self.btn_manual_fetch.setToolTip("Overwrites local files with the latest version from the cloud.")
+        controls_layout.addWidget(self.btn_manual_fetch)
+
         self.btn_start_game = QPushButton("Launch Game")
         self.btn_start_game.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_start_game.setStyleSheet(sheets["btn_utility"])
+        self.btn_start_game.setToolTip("Launches the configured game client executable for instant access.")
         controls_layout.addWidget(self.btn_start_game)
         
         self.btn_open_drive = QPushButton("Open Google Drive")
         self.btn_open_drive.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_open_drive.setStyleSheet(sheets["btn_utility"])
+        self.btn_open_drive.setToolTip("Opens the remote cloud repository web portal in your browser.")
         controls_layout.addWidget(self.btn_open_drive)
         
         self.btn_open_dir = QPushButton("Open Server Folder")
         self.btn_open_dir.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_open_dir.setStyleSheet(sheets["btn_utility"])
+        self.btn_open_dir.setToolTip("Opens your local host file tree directly in File Explorer.")
         controls_layout.addWidget(self.btn_open_dir)
         
         controls_layout.addStretch()
@@ -376,6 +555,7 @@ class MainWindow(QMainWindow):
         self.btn_unlock.setObjectName("btnUnlock")
         self.btn_unlock.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_unlock.setStyleSheet(sheets["btn_unlock"])
+        self.btn_unlock.setToolTip("⚠️ EMERGENCY: Clears the cloud activity lock if a previous host crashed abnormally.")
         controls_layout.addWidget(self.btn_unlock)
         
         body_layout.addWidget(self.controls_frame)
