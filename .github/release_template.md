@@ -34,7 +34,7 @@ Welcome to Version 1.2.0 of Windrose Sync! This essential update supercharges ho
 | ------------------------------------- | ----------- | ------------------------ |
 | [<RELEASE_FILENAME>](<RELEASE_URL>) | x64 Windows | [checksum](<CHECKSUM_URL>) |
 
-> To verify the download on Windows, run `certutil -hashfile <filename> SHA256` and compare it with the `.sha256` file.
+> To verify the download on Windows, run `certutil -hashfile <RELEASE_FILENAME> SHA256` and compare it with the `.sha256` file.
 
 ---
 

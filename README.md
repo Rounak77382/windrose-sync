@@ -42,11 +42,16 @@ It handles everything natively and silently: remote sync locks, automated world 
 ## ✨ Features
 
 * 💎 **Premium Glassmorphic Design:** A state-of-the-art semi-transparent, blurred user interface styled around a rich deep sea abyss and gold theme, with pixel-perfect alpha blending.
+* 📊 **Real-Time Health Dashboards:** High-fidelity vector indicators injected into the header provide live, sub-second visual telemetry on Cloud Mutex, Local Daemon, and Data Drift status.
+* 🛡️ **Shutdown Safety Auditing:** Built-in custom window lifecycle override that audits active sessions, preventing application termination if a daemon is running, a lock is held, or un-saved changes haven't been pushed.
+* 👥 **Live Player Tracking:** Actively tails and parses internal Unreal Engine logging sequences to provide current active user enumeration right within the global header.
+* 🧬 **Sentinel Drift Calculus:** Mathematically compares local file timestamps against encrypted local sentinels to dynamically verify whether your local world folder is truly current or "Ahead" of the cloud.
+* 🗨️ **Custom Tooltip Engine:** Contextually helpful descriptive guidance injected across all actionable controls, explicitly skinned to match the underlying glassmorphic user palette.
+* ☁️ **Dynamic Cloud Directories:** Directly queries `rclone` in non-blocking background threads to retrieve the universal web link to your cloud sync folder.
+* 📂 **Native Directory Navigation:** Launches a native Windows File Explorer navigated exactly to your `WindowsServer` directory with a single click.
 * 🛑 **Dedicated Stealth Server Execution:** Runs your Unreal Engine dedicated server in a 100% headless, invisible background process—eliminating annoying empty command console windows.
 * 🅰️ **Dynamic Font Bootstrapping:** Automatically downloads and registers **PT Sans** directly from Google Fonts on first boot. Zero local installation required.
 * 🎮 **Interactive Game Launching:** Pick your game executable with a native Windows `QFileDialog` on first click, saving it to local configuration for instant future access.
-* ☁️ **Dynamic Cloud Directories:** Directly queries `rclone` in non-blocking background threads to retrieve the universal web link to your cloud sync folder.
-* 📂 **Native Directory Navigation:** Launches a native Windows File Explorer navigated exactly to your `WindowsServer` directory with a single click.
 
 ---
 
